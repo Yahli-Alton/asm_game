@@ -3,7 +3,7 @@ MODEL small
 STACK 100h
 DATASEG
 x dw 308
-y dw 190
+y dw 191
 xs dw 10
 ys dw 190
 color db 7
@@ -55,6 +55,20 @@ proc my_character ; מציירת קוביה
   mov cx, 3
   loopXN: ;מוריד את x
     push cx
+    
+    mov bh, 0h
+    mov cx, [x]
+    mov dx, [y]
+    mov ah, 0dh
+    int 10h
+
+    ;שמירה במערך
+    mov bx, offset my_zone
+    add bx, index
+    mov [bx], al
+    add [index], 1
+
+    ; ציור
     mov bh,0h
     mov cx,[x]
     mov dx,[y]
@@ -69,6 +83,20 @@ proc my_character ; מציירת קוביה
   mov cx, 3
   loopXP2: ;מעלה את x
     push cx
+        
+    mov bh, 0h
+    mov cx, [x]
+    mov dx, [y]
+    mov ah, 0dh
+    int 10h
+
+    ;שמירה במערך
+    mov bx, offset my_zone
+    add bx, index
+    mov [bx], al
+    add [index], 1
+
+    ; ציור
     mov bh,0h
     mov cx,[x]
     mov dx,[y]
@@ -225,7 +253,7 @@ start:
 
 main:
   call my_character
-  ; call print_array
+  call print_array
   mov ah,00h
   int 16h
   cmp al, 'w'
@@ -241,8 +269,8 @@ main:
 movup:
   call delete_char
   call make_screen
-  sub [y], 2
-  call my_character
+  sub [y], 1
+  ; call my_character
   
   ; paint the shvil מצייר שובל
   mov bh,0h
@@ -259,8 +287,8 @@ movup:
 movdown:
   call delete_char
   call make_screen
-  add [y], 2
-  call my_character
+  add [y], 1
+  ; call my_character
 
   ; paint the shvil מצייר שובל
   mov bh,0h
@@ -277,8 +305,8 @@ movdown:
 movleft:
   call delete_char
   call make_screen
-  sub [x], 2
-  call my_character
+  sub [x], 1
+  ; call my_character
 
     ; paint the shvil מצייר שובל
   mov bh,0h
@@ -295,8 +323,8 @@ movleft:
 movright:
   call delete_char
   call make_screen
-  add [x], 2
-  call my_character
+  add [x], 1
+  ; call my_character
   jmp main
 
 
