@@ -8,7 +8,7 @@ xs dw 10
 ys dw 190
 color db 7
 color2 db 4 ; צבע השובל
-colors db 0Eh  ;צבע המסך
+colors db 4  ;צבע המסך
 index dw 0
 i dw 0
 
@@ -151,6 +151,82 @@ proc delete_char ; מוחק את הקוביה
   ret
 endp delete_char
 
+proc delete_char2
+  push [x]
+  push [y]
+  mov cx, 3
+  mov [index], 0
+  loopDXP: ;מעלה את x ;D - delete, X - x, P - positive, N - negative
+    ; שמירה
+    push cx
+
+    ; קליטה מהמערך
+    mov bx, offset my_zone
+    add bx, index
+    mov al, [bx] ;save to al the color
+    add [index], 1
+
+    ; ציור
+    mov bh, 0h
+    mov cx, [x]
+    mov dx, [y]
+    ; al - the color from the array
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [x],1
+    loop loopDXP
+  ; שינוי מיקום
+  sub [y], 1
+  sub [x], 1
+  mov cx, 3
+  loopDXN: ;מוריד את x
+    push cx
+
+    ; קליטה מהמערך
+    mov bx, offset my_zone
+    add bx, index
+    mov al, [bx] ;save to al the color
+    add [index], 1
+
+    ; ציור
+    mov bh,0h
+    mov cx,[x]
+    mov dx,[y]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [x],-1
+    loop loopDXN
+  sub [y], 1
+  add [x], 1
+  mov cx, 3
+  loopDXP2: ;מעלה את x
+    push cx
+        
+
+    ; קליטה מהמערך
+    mov bx, offset my_zone
+    add bx, index
+    mov al, [bx]
+    add [index], 1
+
+    ; ציור
+    mov bh,0h
+    mov cx,[x]
+    mov dx,[y]
+    ; al - the color
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [x],1
+    loop loopDXP2
+  pop [y]
+  pop [x]
+  ret
+endp delete_char2
+
 proc make_screen
     mov cx, 300
   loopSXP: ;מעלה את x ;s = screen x
@@ -253,7 +329,7 @@ start:
 
 main:
   call my_character
-  call print_array
+  ; call print_array
   mov ah,00h
   int 16h
   cmp al, 'w'
@@ -263,20 +339,28 @@ main:
   cmp al, 'a'
   je movleft
   cmp al, 'd'
-  je movright
+  je help ; help jump to movright
+  call delete_char2
   jmp main
 
+help:
+  jmp movright
+
 movup:
-  call delete_char
-  call make_screen
-  sub [y], 1
-  ; call my_character
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 7
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  Je paintUP
+  jmp main
   
-  ; paint the shvil מצייר שובל
+paintUP:  ; paint the shvil מצייר שובל
+  sub [y], 1
   mov bh,0h
   mov cx,[x]
   mov dx,[y]
-  add dx, 1
+  ; sub dx, 1
   add cx, 1
   mov al,[color2]
   mov ah,0ch
@@ -285,16 +369,20 @@ movup:
   jmp main
   
 movdown:
-  call delete_char
-  call make_screen
-  add [y], 1
-  ; call my_character
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 1
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  Je paintD
+  jmp main
 
-  ; paint the shvil מצייר שובל
+paintD:   ; paint the shvil מצייר שובל
+  add [y], 1
   mov bh,0h
   mov cx,[x]
   mov dx,[y]
-  sub dx, 3
+  sub dx, 2
   add cx, 1
   mov al,[color2]
   mov ah,0ch
@@ -303,17 +391,21 @@ movdown:
   jmp main
 
 movleft:
-  call delete_char
-  call make_screen
-  sub [x], 1
-  ; call my_character
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 5
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  Je paintL
+  jmp main
 
-    ; paint the shvil מצייר שובל
+paintL:    ; paint the shvil מצייר שובל
+  sub [x], 1
   mov bh,0h
   mov cx,[x]
   mov dx,[y]
   sub dx, 1
-  add cx, 3
+  add cx, 2
   mov al,[color2]
   mov ah,0ch
   int 10h
@@ -321,10 +413,25 @@ movleft:
   jmp main
 
 movright:
-  call delete_char
-  call make_screen
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 3
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  Je paintR
+  jmp main
+
+paintR:
   add [x], 1
-  ; call my_character
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  ; sub cx, 2
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+
   jmp main
 
 
