@@ -340,11 +340,16 @@ main:
   je movleft
   cmp al, 'd'
   je help ; help jump to movright
+  cmp al, ' '
+  je help2  ;jump to space
   call delete_char2
   jmp main
 
 help:
   jmp movright
+
+help2:
+  jmp space
 
 movup:
   call delete_char2
@@ -431,8 +436,121 @@ paintR:
   mov al,[color2]
   mov ah,0ch
   int 10h
-
   jmp main
+
+
+space:
+  call delete_char2
+space_main:
+  ; like main
+  call my_character
+  ; call print_array
+  mov ah,00h
+  int 16h
+  cmp al, 'w'
+  je movup2
+  cmp al, 's'
+  je movdown2
+  cmp al, 'd'
+  je movright2
+  cmp al, 'a'
+  je help3 ;jmp to movleft2
+
+  call delete_char2
+  jmp space_main
+
+help3:
+  jmp movleft2
+
+movup2:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 7
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  je help_main  ;jmp to main
+  
+  ; paint the red dot
+  sub [y], 1
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  ; sub dx, 1
+  add cx, 1
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+
+
+  jmp space_main
+
+help_main:
+  jmp main
+
+movdown2:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 1
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  je help_main  ;jmp to main
+
+
+  ; paint the shvil מצייר שובל
+  add [y], 1
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 2
+  add cx, 1
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  
+  jmp space_main
+
+movright2:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 3
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  je help_main  ;jmp to main
+
+  ; paint
+  add [x], 1
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  ; sub cx, 2
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  jmp space_main
+
+
+movleft2:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 5
+  mov al, [bx] ;save to al the color
+  cmp al, 4
+  je help_main  ;jmp to main
+
+  ; paint the shvil מצייר שובל
+  sub [x], 1
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  add cx, 2
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+
+  jmp space_main
+
 
 
 mainloop:
