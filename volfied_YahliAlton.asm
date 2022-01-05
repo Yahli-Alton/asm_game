@@ -8,7 +8,7 @@ xs dw 10
 ys dw 190
 color db 7
 color2 db 4 ; צבע השובל
-colors db 4  ;צבע המסך
+colors db 0eh  ;צבע המסך
 index dw 0
 i dw 0
 
@@ -356,21 +356,12 @@ movup:
   mov bx, offset my_zone
   add bx, 7
   mov al, [bx] ;save to al the color
-  cmp al, 4
+  cmp al, 0eh
   Je paintUP
   jmp main
   
 paintUP:  ; paint the shvil מצייר שובל
   sub [y], 1
-  mov bh,0h
-  mov cx,[x]
-  mov dx,[y]
-  ; sub dx, 1
-  add cx, 1
-  mov al,[color2]
-  mov ah,0ch
-  int 10h
-
   jmp main
   
 movdown:
@@ -378,21 +369,12 @@ movdown:
   mov bx, offset my_zone
   add bx, 1
   mov al, [bx] ;save to al the color
-  cmp al, 4
+  cmp al, 0eh
   Je paintD
   jmp main
 
 paintD:   ; paint the shvil מצייר שובל
   add [y], 1
-  mov bh,0h
-  mov cx,[x]
-  mov dx,[y]
-  sub dx, 2
-  add cx, 1
-  mov al,[color2]
-  mov ah,0ch
-  int 10h
-  
   jmp main
 
 movleft:
@@ -400,21 +382,12 @@ movleft:
   mov bx, offset my_zone
   add bx, 5
   mov al, [bx] ;save to al the color
-  cmp al, 4
+  cmp al, 0eh
   Je paintL
   jmp main
 
 paintL:    ; paint the shvil מצייר שובל
   sub [x], 1
-  mov bh,0h
-  mov cx,[x]
-  mov dx,[y]
-  sub dx, 1
-  add cx, 2
-  mov al,[color2]
-  mov ah,0ch
-  int 10h
-
   jmp main
 
 movright:
@@ -422,25 +395,19 @@ movright:
   mov bx, offset my_zone
   add bx, 3
   mov al, [bx] ;save to al the color
-  cmp al, 4
+  cmp al, 0eh
   Je paintR
   jmp main
 
 paintR:
   add [x], 1
-  mov bh,0h
-  mov cx,[x]
-  mov dx,[y]
-  sub dx, 1
-  ; sub cx, 2
-  mov al,[color2]
-  mov ah,0ch
-  int 10h
   jmp main
 
 
 space:
   call delete_char2
+  ; cmp [x], 308
+
 space_main:
   ; like main
   call my_character
@@ -464,11 +431,6 @@ help3:
 
 movup2:
   call delete_char2
-  mov bx, offset my_zone
-  add bx, 7
-  mov al, [bx] ;save to al the color
-  cmp al, 4
-  je help_main  ;jmp to main
   
   ; paint the red dot
   sub [y], 1
@@ -481,19 +443,17 @@ movup2:
   mov ah,0ch
   int 10h
 
+  mov bx, offset my_zone
+  add bx, 7
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  je help_main  ;jmp to main
 
   jmp space_main
 
-help_main:
-  jmp main
 
 movdown2:
   call delete_char2
-  mov bx, offset my_zone
-  add bx, 1
-  mov al, [bx] ;save to al the color
-  cmp al, 4
-  je help_main  ;jmp to main
 
 
   ; paint the shvil מצייר שובל
@@ -506,16 +466,20 @@ movdown2:
   mov al,[color2]
   mov ah,0ch
   int 10h
+
+  mov bx, offset my_zone
+  add bx, 1
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  je help_main  ;jmp to main
   
   jmp space_main
 
+help_main:
+  jmp main
+
 movright2:
   call delete_char2
-  mov bx, offset my_zone
-  add bx, 3
-  mov al, [bx] ;save to al the color
-  cmp al, 4
-  je help_main  ;jmp to main
 
   ; paint
   add [x], 1
@@ -527,16 +491,18 @@ movright2:
   mov al,[color2]
   mov ah,0ch
   int 10h
+
+  mov bx, offset my_zone
+  add bx, 3
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  je help_main  ;jmp to main
+
   jmp space_main
 
 
 movleft2:
   call delete_char2
-  mov bx, offset my_zone
-  add bx, 5
-  mov al, [bx] ;save to al the color
-  cmp al, 4
-  je help_main  ;jmp to main
 
   ; paint the shvil מצייר שובל
   sub [x], 1
@@ -548,6 +514,12 @@ movleft2:
   mov al,[color2]
   mov ah,0ch
   int 10h
+
+  mov bx, offset my_zone
+  add bx, 5
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  je help_main  ;jmp to main
 
   jmp space_main
 
