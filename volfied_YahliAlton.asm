@@ -6,9 +6,16 @@ x dw 308
 y dw 191
 xs dw 10
 ys dw 190
+maxx dw 0
+maxy dw 0
+minx dw 9999
+miny dw 9999
+paintx dw 0
+painty dw 0
 color db 7
 color2 db 4 ; צבע השובל
-colors db 0eh  ;צבע המסך
+color3 db 2 ; for debug
+colors db 4  ;צבע המסך
 index dw 0
 i dw 0
 
@@ -316,6 +323,11 @@ proc print_array ;for debug
   ret
 endp print_array
 
+proc paint_area
+
+
+endp paint_area
+
 start:
   mov ax, @data
   mov ds, ax
@@ -357,11 +369,11 @@ movup:
   mov bx, offset my_zone
   add bx, 7
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   Je paintUP
   jmp main
   
-paintUP:  ; paint the shvil מצייר שובל
+paintUP:  ; just move
   sub [y], 1
   jmp main
   
@@ -370,11 +382,11 @@ movdown:
   mov bx, offset my_zone
   add bx, 1
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   Je paintD
   jmp main
 
-paintD:   ; paint the shvil מצייר שובל
+paintD:   ; just move (there is no sence to the name
   add [y], 1
   jmp main
 
@@ -383,11 +395,11 @@ movleft:
   mov bx, offset my_zone
   add bx, 5
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   Je paintL
   jmp main
 
-paintL:    ; paint the shvil מצייר שובל
+paintL:    ; just move
   sub [x], 1
   jmp main
 
@@ -396,11 +408,11 @@ movright:
   mov bx, offset my_zone
   add bx, 3
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   Je paintR
   jmp main
 
-paintR:
+paintR: ; just move
   add [x], 1
   jmp main
 
@@ -412,8 +424,38 @@ space:
 space_main:
   ; like main
   call my_character
-  call make_screen
+  ; call make_screen
   ; call print_array
+  
+  ; checking minimum and maximum
+  mov bx, [x]
+  cmp bx, maxx
+  jg maxx1
+  cmp bx, minx
+  jl minx1
+  mov bx, [y]
+  cmp bx, maxy
+  jg maxy1
+  cmp bx, miny
+  jl miny1 
+
+maxx1:
+  mov [maxx], bx
+  jmp space_main_continue
+
+minx1:
+  mov [minx], bx
+  jmp space_main_continue
+
+maxy1:
+  mov [maxy], bx
+  jmp space_main_continue
+
+miny1:
+  mov [miny], bx
+  jmp space_main_continue
+
+space_main_continue:
   mov ah,00h
   int 16h
   cmp al, 'w'
@@ -421,15 +463,19 @@ space_main:
   cmp al, 's'
   je movdown2
   cmp al, 'd'
-  je movright2
+  je help4 ;jmp to movright2
   cmp al, 'a'
   je help3 ;jmp to movleft2
-
+  
   call delete_char2
   jmp space_main
 
+help4:
+  jmp movright2
+
 help3:
   jmp movleft2
+
 
 movup2:
   call delete_char2
@@ -448,7 +494,7 @@ movup2:
   mov bx, offset my_zone
   add bx, 7
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   je help_main  ;jmp to main
 
   jmp space_main
@@ -472,14 +518,10 @@ movdown2:
   mov bx, offset my_zone
   add bx, 1
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   je help_main  ;jmp to main
   
   jmp space_main
-
-help_main:
-  call make_screen
-  jmp main
 
 movright2:
   call delete_char2
@@ -498,11 +540,37 @@ movright2:
   mov bx, offset my_zone
   add bx, 3
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   je help_main  ;jmp to main
 
   jmp space_main
 
+help_main:
+  ; call make_screen
+
+  ; debug - minimum point
+  ; mov bh,0h
+  ; mov cx, [minx]
+  ; mov dx,[miny]
+  ; sub dx, 3
+  ; mov al,[color3]
+  ; mov ah,0ch
+  ; int 10h
+  ; debug - maximum point
+  ; mov bh,0h
+  ; mov cx, [maxx]
+  ; mov dx,[maxy]
+  ; add dx, 3
+  ; add cx, 3
+  ; mov al,[color3]
+  ; mov ah,0ch
+  ; int 10h
+  
+  sub [miny], 3
+  add [maxx], 3
+  add [maxy], 3
+
+  jmp main
 
 movleft2:
   call delete_char2
@@ -521,7 +589,7 @@ movleft2:
   mov bx, offset my_zone
   add bx, 5
   mov al, [bx] ;save to al the color
-  cmp al, 0eh
+  cmp al, colors
   je help_main  ;jmp to main
 
   jmp space_main
