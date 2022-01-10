@@ -327,6 +327,7 @@ start:
   mov ah, 00h
   int 16h
 
+
 main:
   call my_character
   ; call print_array
@@ -411,6 +412,7 @@ space:
 space_main:
   ; like main
   call my_character
+  call make_screen
   ; call print_array
   mov ah,00h
   int 16h
@@ -476,6 +478,7 @@ movdown2:
   jmp space_main
 
 help_main:
+  call make_screen
   jmp main
 
 movright2:
