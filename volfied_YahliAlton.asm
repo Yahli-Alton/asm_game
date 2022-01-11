@@ -15,7 +15,7 @@ painty dw 0
 color db 7
 color2 db 4 ; צבע השובל
 color3 db 2 ; for debug
-colors db 4  ;צבע המסך
+colors db 0eh  ;צבע המסך
 index dw 0
 i dw 0
 
@@ -324,8 +324,37 @@ proc print_array ;for debug
 endp print_array
 
 proc paint_area
+start_paint:
+  mov cx, 10 
+  mov ax, maxx
+  mov bx, maxy
+  mov [paintx], ax
+  mov [painty], bx
 
 
+main_paint:
+  ; שמירה
+  push cx
+  mov bh, 0h
+  mov cx, paintx
+  mov dx, painty
+  mov ah, 0dh
+  int 10h
+  ; in al the color
+  ; cmp al, 
+  
+    ; ציור
+  mov bh, 0h
+  mov cx, paintx
+  mov dx, painty
+  mov al,[color]
+  mov ah,0ch
+  int 10h
+  pop cx
+  
+  loop main_paint
+
+  ret
 endp paint_area
 
 start:
@@ -438,6 +467,7 @@ space_main:
   jg maxy1
   cmp bx, miny
   jl miny1 
+  jmp space_main_continue
 
 maxx1:
   mov [maxx], bx
@@ -547,8 +577,11 @@ movright2:
 
 help_main:
   ; call make_screen
+  sub [miny], 3
+  add [maxx], 3
+  add [maxy], 3
 
-  ; debug - minimum point
+  ; ; debug - minimum point
   ; mov bh,0h
   ; mov cx, [minx]
   ; mov dx,[miny]
@@ -556,7 +589,7 @@ help_main:
   ; mov al,[color3]
   ; mov ah,0ch
   ; int 10h
-  ; debug - maximum point
+  ; ; debug - maximum point
   ; mov bh,0h
   ; mov cx, [maxx]
   ; mov dx,[maxy]
@@ -566,9 +599,9 @@ help_main:
   ; mov ah,0ch
   ; int 10h
   
-  sub [miny], 3
-  add [maxx], 3
-  add [maxy], 3
+
+
+  ; call paint_area
 
   jmp main
 
