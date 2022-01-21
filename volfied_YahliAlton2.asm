@@ -6,6 +6,8 @@ x dw 308 ; the cords of the character
 y dw 191
 xs dw 10 ; the cords of the screen
 ys dw 190
+xs2 dw 10
+ys2 dw 190
 startx dw 0
 starty dw 0 ;the cords when pressing space
 paintx dw 0
@@ -13,6 +15,7 @@ painty dw 0
 color db 7
 color2 db 4 ; צבע השובל
 colors db 0eh  ;צבע המסך
+colord db 5 ;for debug
 index dw 0
 i dw 0
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
@@ -289,7 +292,53 @@ proc print_array ;for debug
   pop dx
   ret
 endp print_array
+
+proc red_to_yellow
+  mov [xs2], 10
+  mov [ys2], 190
+  loopaint:
+    mov bh, 0h
+    mov cx, [xs2]
+    mov dx, [ys2]
+    mov ah, 0dh
+    int 10h
+
+    
+    cmp al, 4
+    je paint_red
+    jmp loopend
+
+  paint_red:
+    mov bh,0h
+    mov cx,[xs2]
+    mov dx,[ys2]
+    mov al,[colors]
+    mov ah,0ch
+    int 10h
+  
+  loopend:
+    add [xs2], 1
+    cmp [xs2], 310
+    je upy
+    jmp loopaint
+
+  upy:
+    mov [xs2], 10
+    sub [ys2], 1
+
+    cmp [ys2], 10
+    je endpaint
+    jmp loopaint
+
+endpaint:
+  ret
+endp red_to_yellow
+
+
+
 proc paint_area2 ; algorithm flood_fill
+
+
     ; save to al the color
   mov bh, 0h
   mov cx, [paintx]
@@ -307,9 +356,10 @@ proc paint_area2 ; algorithm flood_fill
   mov bh,0h
   mov cx,[paintx]
   mov dx,[painty]
-  mov al,[color2]
+  mov al,[colors]
   mov ah,0ch
   int 10h
+  
   
   ; go to all 4 directions
   add paintx, 1
@@ -322,7 +372,7 @@ proc paint_area2 ; algorithm flood_fill
   sub painty, 2
   call paint_area2
 
-end_func:
+end_func:  
   pop dx ;get painty
   pop cx ;get paintx
   mov [paintx], cx ;return to the back cords
@@ -487,6 +537,7 @@ help_main:
   ; call make_screen
   call start_paint
   call paint_area2
+  call red_to_yellow
   jmp main
 
 movright2:
