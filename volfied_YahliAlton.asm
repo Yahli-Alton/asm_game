@@ -15,6 +15,7 @@ painty dw 0
 color db 7
 color2 db 4 ; צבע השובל
 color3 db 2 ; for debug
+color4 db 9 ; for debug
 colors db 0eh  ;צבע המסך
 index dw 0
 i dw 0
@@ -323,7 +324,7 @@ proc print_array ;for debug
   ret
 endp print_array
 
-proc paint_area
+proc paint_area_beta
 start_paint:
   mov cx, 10 
   mov ax, maxx
@@ -355,7 +356,13 @@ main_paint:
   loop main_paint
 
   ret
+endp paint_area_beta
+
+proc paint_area
+  ret
 endp paint_area
+
+
 
 start:
   mov ax, @data
@@ -446,9 +453,98 @@ paintR: ; just move
   jmp main
 
 
-space:
+space: ; first space move
   call delete_char2
+  
+  mov bx, [x]
+  mov maxx, bx
+  mov minx, bx
+  mov bx, [y]
+  mov maxy, bx
+  mov miny, bx
   ; cmp [x], 308
+  
+  call my_character
+  mov ah,00h
+  int 16h
+  cmp al, 'w'
+  je movup_first
+  cmp al, 's'
+  je movdown_first
+  cmp al, 'd'
+  je movright_first
+  cmp al, 'a'
+  je movleft_first ;jmp to movleft2
+  
+  call delete_char2
+  jmp space
+movup_first:
+  cmp [y], 11 ;checks if gets outside the screen
+  je space
+
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 7
+  mov dl, [bx]
+  cmp dl, 0eh
+  je space
+
+  ; move
+  call delete_char2
+  sub [y], 1
+  jmp space_main
+
+movdown_first:
+  cmp [y], 191 ;checks if gets outside the screen
+  je space
+  
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 1
+  mov dl, [bx]
+  cmp dl, 0eh
+  je space
+
+  ; move
+  call delete_char2
+  add [y], 1
+  jmp space_main
+
+movleft_first:
+  cmp [x], 9 ;checks if gets outside the screen
+  je help5 ;jmp to space
+
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 5
+  mov dl, [bx]
+  cmp dl, 0eh
+  je help5
+
+  ; move
+  call delete_char2
+  sub [x], 1
+  jmp space_main
+
+help5:
+  jmp space
+
+movright_first:
+  cmp [x], 309 ;checks if gets outside the screen
+  je help5 ;jmp to space
+
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 3
+  mov dl, [bx]
+  cmp dl, 0eh
+  je help5
+
+  ; move
+  call delete_char2
+  add [x], 1
+  jmp space_main
+
 
 space_main:
   ; like main
@@ -601,7 +697,7 @@ help_main:
   
 
 
-  ; call paint_area
+  call paint_area
 
   jmp main
 
