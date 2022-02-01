@@ -63,25 +63,25 @@ proc paint_area2 ; alagorithm flood_fill
   sub [painty], 2
   call paint_area2
 
-end_func:  
-  pop dx ;get paintyaaaa
-  pop cx ;get paintx
-  mov [paintx], cx ;return to the back cords
-  mov [painty], dx
-  ; cmp [painty], 100
-  ; je countinu2
-  ret
+  end_func:  
+    pop dx ;get paintyaaaa
+    pop cx ;get paintx
+    mov [paintx], cx ;return to the back cords
+    mov [painty], dx
+    ; cmp [painty], 100
+    ; je countinu2
+    ret
 
-countinu2:
-  ; mov ah, 00h
-  ; int 16h
+  countinu2:
+    ; mov ah, 00h
+    ; int 16h
 
-  ; mov dl, 48
-  ; add dl, dh
-  ; mov ah, 02h
-  ; int 21h
+    ; mov dl, 48
+    ; add dl, dh
+    ; mov ah, 02h
+    ; int 21h
 
-  ret
+    ret
 endp paint_area2
 
 proc my_character ; מציירת קוביה
@@ -387,15 +387,14 @@ proc red_to_yellow
     jmp loopaint
 
   upy:
-    mov [xs2], 10
+    mov [xs2], 10    
     sub [ys2], 1
-
     cmp [ys2], 10
     je endpaint
     jmp loopaint
 
-endpaint:
-  ret
+  endpaint:
+    ret
 endp red_to_yellow
 
 
@@ -650,11 +649,13 @@ yellow_check_loop:
   mov dl, 48
   add dl, [bx] ;if it yellow [bx] = 14
   cmp dl, 62
-  je help_main
+  je help9 ; jump to help_main
 
   add bx, 1
   loop yellow_check_loop
 
+  ; the countinu of space main:
+  
   ; like main
   ; call make_screen
   ; call print_array
@@ -666,11 +667,16 @@ yellow_check_loop:
   cmp al, 's'
   je movdown2
   cmp al, 'd'
-  je movright2
+  je help10 ;jmp to movright
   cmp al, 'a'
   je help3 ;jmp to movleft2
   call delete_char2
   jmp space_main
+
+help10:
+  jmp movright2
+help9:
+  jmp help_main
 help3:
   jmp movleft2
 movup2:
@@ -689,15 +695,30 @@ movup2:
   int 10h
 
   sub dx, 1
+
+  ; check if red
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je help11 ;jmp to exit
+
+  mov ah, 0ch
+  mov al,[color2]
   int 10h
 
-  
+  ; call print_array
+
+
+
   ; mov bx, offset my_zone
   ; add bx, 7
   ; mov al, [bx] ;save to al the color
   ; cmp al, 0eh
   ; je help_main  ;jmp to main
   jmp space_main
+
+help11:
+  jmp exit
 movdown2:
   call delete_char2
   ; paint the shvil מצייר שובל
@@ -710,8 +731,19 @@ movdown2:
   mov al,[color2]
   mov ah,0ch
   int 10h
+  
+  
 
   add dx, 1
+  
+    ; check if red
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je help11 ;jmp to exit
+
+  mov ah, 0ch
+  mov al, [color2]
   int 10h
   ; mov bx, offset my_zone
   ; add bx, 1
@@ -740,11 +772,21 @@ movright2:
   mov dx,[y]
   sub dx, 1
   ; sub cx, 2
+
+
   mov al,[color2]
   mov ah,0ch
   int 10h
-
   add cx, 1
+  
+    ; check if red
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je exit ;jmp to exit
+
+  mov ah, 0ch
+  mov al, [color2]
   int 10h
   ; mov bx, offset my_zone
   ; add bx, 3
@@ -761,12 +803,25 @@ movleft2:
   mov dx,[y]
   sub dx, 1
   add cx, 2
+  
   mov al,[color2]
   mov ah,0ch
   int 10h
 
   sub cx, 1
+
+  ; check if red
+  mov ah, 0dh
   int 10h
+  cmp al, [color2]
+  je exit ;jmp to exit
+
+  mov al, [color2]
+  mov ah, 0ch
+  int 10h
+  
+
+
   ; mov bx, offset my_zone
   ; add bx, 5
   ; mov al, [bx] ;save to al the color
