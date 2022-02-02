@@ -2,6 +2,7 @@ IDEAL
 MODEL small
 STACK 100h
 DATASEG
+; cords:
 x dw 309 ; the cords of the character
 y dw 191
 xs dw 10 ; the cords of the screen
@@ -12,14 +13,19 @@ startx dw 0
 starty dw 0 ;the cords when pressing space
 paintx dw 0
 painty dw 0
+stopx dw 0 ;the last pixel we stop to paint
+stopy dw 0
+
+; colors:
 color db 7
 color2 db 4 ; צבע השובל
 colors db 0eh  ;צבע המסך
-colord db 5 ;for debug
-
+colord db 2 ;for debug
+colord2 db 5
 colorg1 db 4 ;color
 colorg2 db 0eh ;to color
 
+; other:
 index dw 0
 i dw 0
 number_of_runns dw 0
@@ -34,9 +40,16 @@ first_tav db 0
 ;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
 final_tav db 0
 
+is_complete_paint db 0
+
 
 
 CODESEG
+
+
+help12:
+  jmp end_func
+
 proc paint_area2 ; alagorithm flood_fill
 
 
@@ -49,13 +62,24 @@ proc paint_area2 ; alagorithm flood_fill
   mov ah, 0dh
   int 10h
   cmp al, 4
-  je end_func 
+  je help12 ;jmp to end_func 
   cmp al, 0eh
-  je end_func
+  je help12 ; jmp to end_func
   cmp al, 8
-  je end_func
-  cmp number_of_runns, 32763
-  jg end_func
+  je help12 ; jmp to end_func
+  ;32763
+  cmp [number_of_runns], 20000
+  jg help12 ; jmp to end_func
+  cmp [number_of_runns], 19997
+  je max_run
+  cmp [number_of_runns], 19998
+  je max_run
+  cmp [number_of_runns], 19999
+  je max_run
+  cmp [number_of_runns], 20000
+  je max_run
+
+  
   ; cmp al, 7
   ; je end_func
   
@@ -78,7 +102,28 @@ proc paint_area2 ; alagorithm flood_fill
   call paint_area2
   sub [painty], 2
   call paint_area2
+  jmp end_func
 
+  max_run:
+    add [number_of_runns], 10
+    mov ax, [paintx]
+    mov [stopx], ax
+    mov ax, [painty]
+    mov [stopy], ax
+    mov [is_complete_paint], 0
+
+    mov bh,0h
+    mov cx,[paintx]
+    mov dx,[painty]
+    mov al,[colord2]
+    mov ah,0ch
+    int 10h
+    mov ah,00h
+    int 16h
+
+    mov dl, 48
+    mov ah, 02h
+    int 21h
   end_func:  
     pop dx ;get paintyaaaa
     pop cx ;get paintx
@@ -88,16 +133,6 @@ proc paint_area2 ; alagorithm flood_fill
     ; je countinu2
     ret
 
-  countinu2:
-    ; mov ah, 00h
-    ; int 16h
-
-    ; mov dl, 48
-    ; add dl, dh
-    ; mov ah, 02h
-    ; int 21h
-
-    ret
 endp paint_area2
 
 proc my_character ; מציירת קוביה
@@ -518,8 +553,8 @@ proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
   up_paint2:
     mov ax, [x]
     cmp ax, [startx]
-    jle up_right2
-    jg up_left2
+    jl up_right2
+    jge up_left2
     jmp exit
 
   up_right2:
@@ -534,8 +569,8 @@ proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
   down_paint2:
     mov ax, [x]
     cmp ax, [startx]
-    jle down_right2
-    jg down_left2
+    jl down_right2
+    jge down_left2
     jmp exit
 
   down_right2:
@@ -547,8 +582,8 @@ proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
   right_paint2:
     mov ax, [y]
     cmp ax, [starty]
-    jle right_down2
-    jg right_up2
+    jl right_down2
+    jge right_up2
     jmp exit
 
   right_down2:
@@ -563,8 +598,8 @@ proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
   left_paint2:
     mov ax, [y]
     cmp ax, [starty]
-    jle left_down2
-    jg left_up2
+    jl left_down2
+    jge left_up2
     jmp exit
 
   left_down2:
@@ -576,10 +611,7 @@ proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
 
 endp start_paintN
 
-proc paint_area3
 
-
-endp paint_area3
 
 
 start:
@@ -955,52 +987,131 @@ help_main: ;the painting area (does'nt change the name because I don't want to c
   call color_to_color
   jmp main
 
+help13: 
+  jmp countinu_regular_paint
+
 regular_paint: ;first check if the area bigger than we can paint
-  mov [number_of_runns], 0
-  call start_paint
-  mov [colors], 8
-  call paint_area2
+  ; mov [number_of_runns], 0
+  ; call start_paint
+  ; mov [colors], 8
+  ; call paint_area2
 
-  ; grey to black
-  mov [colorg1], 8
-  mov [colorg2], 0
-  call color_to_color
+  ; ; grey to black
+  ; mov [colorg1], 8
+  ; mov [colorg2], 0
+  ; call color_to_color
 
-  cmp [number_of_runns], 32763
-  jl countinu_regular_paint
+  ; cmp [number_of_runns], 20000
+  ; jl help13 ;jmp to countinu_regular_paint 
 
-  mov [number_of_runns], 0
-  call start_paintN
-  call paint_area2
+  ; mov [number_of_runns], 0
+  ; call start_paintN
+  ; call paint_area2
 
-  ; grey to black
-  mov [colorg1], 8
-  mov [colorg2], 0
-  call color_to_color
+  ; ; grey to black
+  ; mov [colorg1], 8
+  ; mov [colorg2], 0
+  ; call color_to_color
 
 
-  cmp [number_of_runns], 32763
-  jl countinu_regular_paint
+  ; cmp [number_of_runns], 20000
+  ; jl countinu_regular_paint
 
-  mov [number_of_runns], 0
-  mov [colors], 0eh
+  ; mov [number_of_runns], 0
+  ; mov [colors], 0eh
+  ; until here
   
-  ; red to black
-  mov [colorg1], 4
-  mov [colorg2], 0
-  call color_to_color
+  ; ; red to black
+  ; mov [colorg1], 4
+  ; mov [colorg2], 0
+  ; call color_to_color
 
-  call make_screen
+  ; call make_screen
+  call start_paint
+  call paint_area2
+endless_paint: ;paint again and again until we paint all the area
+  mov [number_of_runns], 0
+  mov [is_complete_paint], 1
+  mov ax, [stopx]
+  mov [paintx], ax
+  mov ax, [stopy]
+  mov [painty], ax
+  ; painting
+  mov bh,0h
+  mov cx,[paintx]
+  mov dx,[painty]
+  mov al,[colord]
+  mov ah,0ch
+  int 10h
+  mov ah,00h
+  int 16h
+  call paint_area2
+  add [paintx], 1
+  mov bh,0h
+  mov cx,[paintx]
+  mov dx,[painty]
+  mov al,[colord]
+  mov ah,0ch
+  int 10h
+  mov ah,00h
+  int 16h
+  call paint_area2
+  sub [paintx], 2
+  mov bh,0h
+  mov cx,[paintx]
+  mov dx,[painty]
+  mov al,[colord]
+  mov ah,0ch
+  int 10h
+  call paint_area2
+  add [paintx], 1 ;return paintx to default
+  add [painty], 1
+  mov bh,0h
+  mov cx,[paintx]
+  mov dx,[painty]
+  mov al,[colord]
+  mov ah,0ch
+  int 10h
+  call paint_area2
+  sub [painty], 2
+  mov bh,0h
+  mov cx,[paintx]
+  mov dx,[painty]
+  mov al,[colord]
+  mov ah,0ch
+  int 10h
+  call paint_area2
+
+  ; mov bh,0h
+  ; mov cx,[startx]
+  ; mov dx,[starty]
+  ; mov al,[colord]
+  ; mov ah,0ch
+  ; int 10h
+  mov dl, 48
+  add dl, 3
+  mov ah, 02h
+  int 21h
+
+  cmp [is_complete_paint], 0
+  je help14  ;jmp to endless_paint
+
+    ; red to yellow
+  mov [colorg1], 4
+  mov [colorg2], 0eh
+  call color_to_color
 
   jmp main
+help14: 
+jmp endless_paint
 
 countinu_regular_paint:
   mov [colors], 0eh
   mov number_of_runns, 0
   call paint_area2
   ; jmp mainloop
-
-  ; red to black
+  
+  ; red to yellow
   mov [colorg1], 4
   mov [colorg2], 0eh
   call color_to_color

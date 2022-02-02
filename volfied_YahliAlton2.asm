@@ -19,6 +19,7 @@ colord db 5 ;for debug
 index dw 0
 i dw 0
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
+
 CODESEG
 proc my_character ; מציירת קוביה
   push [x]
