@@ -16,10 +16,16 @@ color db 7
 color2 db 4 ; צבע השובל
 colors db 0eh  ;צבע המסך
 colord db 5 ;for debug
+
+colorg1 db 4 ;color
+colorg2 db 0eh ;to color
+
 index dw 0
 i dw 0
 number_of_runns dw 0
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
+sum_pixels dw 53044
+
 
 ; booleans: 
 ;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
@@ -45,6 +51,8 @@ proc paint_area2 ; alagorithm flood_fill
   cmp al, 4
   je end_func 
   cmp al, 0eh
+  je end_func
+  cmp al, 8
   je end_func
   cmp number_of_runns, 32763
   jg end_func
@@ -365,7 +373,7 @@ proc print_array ;for debug
   ret
 endp print_array
 
-proc red_to_yellow
+proc color_to_color
   mov [xs2], 10
   mov [ys2], 190
   loopaint:
@@ -376,7 +384,7 @@ proc red_to_yellow
     int 10h
 
     
-    cmp al, 4
+    cmp al, [colorg1]
     je paint_red
     jmp loopend
 
@@ -384,7 +392,7 @@ proc red_to_yellow
     mov bh,0h
     mov cx,[xs2]
     mov dx,[ys2]
-    mov al,[colors]
+    mov al,[colorg2]
     mov ah,0ch
     int 10h
   
@@ -403,7 +411,7 @@ proc red_to_yellow
 
   endpaint:
     ret
-endp red_to_yellow
+endp color_to_color
 
 
 proc start_paint ;where to start painting ;right now not ready
@@ -426,66 +434,154 @@ proc start_paint ;where to start painting ;right now not ready
   je left_paint
   jmp exit
 
-up_paint:
-  mov ax, [x]
-  cmp ax, [startx]
-  jg up_right
-  jl up_left
-  jmp exit
+  up_paint:
+    mov ax, [x]
+    cmp ax, [startx]
+    jge up_right
+    jl up_left
+    jmp exit
 
-up_right:
-  sub [painty], 2
-  add [paintx], 2
-  ret
+  up_right:
+    sub [painty], 2
+    add [paintx], 2
+    ret
 
-up_left:
-  sub [painty], 2
-  ret
+  up_left:
+    sub [painty], 2
+    ret
 
-down_paint:
-  mov ax, [x]
-  cmp ax, [startx]
-  jg down_right
-  jl down_left
-  jmp exit
+  down_paint:
+    mov ax, [x]
+    cmp ax, [startx]
+    jge down_right
+    jl down_left
+    jmp exit
 
-down_right:
-  add [paintx], 2
-  ret
-down_left:
-  ret
+  down_right:
+    add [paintx], 2
+    ret
+  down_left:
+    ret
 
-right_paint:
-  mov ax, [y]
-  cmp ax, [starty]
-  jg right_down
-  jl right_up
-  jmp exit
+  right_paint:
+    mov ax, [y]
+    cmp ax, [starty]
+    jge right_down
+    jl right_up
+    jmp exit
 
-right_down:
-  add [paintx], 2
-  ret
+  right_down:
+    add [paintx], 2
+    ret
 
-right_up:
-  add [paintx], 2
-  sub [painty], 2
-  ret
+  right_up:
+    add [paintx], 2
+    sub [painty], 2
+    ret
 
-left_paint:
-  mov ax, [y]
-  cmp ax, [starty]
-  jg left_down
-  jl left_up
-  jmp exit
+  left_paint:
+    mov ax, [y]
+    cmp ax, [starty]
+    jge left_down
+    jl left_up
+    jmp exit
 
-left_down:
-  ret
+  left_down:
+    ret
 
-left_up:
+  left_up:
   sub [painty], 2
   ret
 
 endp start_paint
+
+proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
+  mov ax, startx
+  mov [paintx], ax
+  mov ax, starty
+  mov [painty], ax
+
+
+
+  mov al, [first_tav]
+  mov ah, [final_tav]
+  cmp al, 1
+  je up_paint2
+  cmp al, 2
+  je down_paint2
+  cmp al, 3
+  je right_paint2
+  cmp al, 4
+  je left_paint2
+  jmp exit
+
+  up_paint2:
+    mov ax, [x]
+    cmp ax, [startx]
+    jle up_right2
+    jg up_left2
+    jmp exit
+
+  up_right2:
+    sub [painty], 2
+    add [paintx], 2
+    ret
+
+  up_left2:
+    sub [painty], 2
+    ret
+
+  down_paint2:
+    mov ax, [x]
+    cmp ax, [startx]
+    jle down_right2
+    jg down_left2
+    jmp exit
+
+  down_right2:
+    add [paintx], 2
+    ret
+  down_left2:
+    ret
+
+  right_paint2:
+    mov ax, [y]
+    cmp ax, [starty]
+    jle right_down2
+    jg right_up2
+    jmp exit
+
+  right_down2:
+    add [paintx], 2
+    ret
+
+  right_up2:
+    add [paintx], 2
+    sub [painty], 2
+    ret
+
+  left_paint2:
+    mov ax, [y]
+    cmp ax, [starty]
+    jle left_down2
+    jg left_up2
+    jmp exit
+
+  left_down2:
+    ret
+
+  left_up2:
+  sub [painty], 2
+  ret
+
+endp start_paintN
+
+proc paint_area3
+
+
+endp paint_area3
+
+
 start:
   mov ax, @data
   mov ds, ax
@@ -496,6 +592,14 @@ start:
   call make_screen
   mov ah, 00h
   int 16h
+  
+  ; variables for the game
+  mov x, 309 ; the cords of the character
+  mov y, 191
+  mov xs, 10 ; the cords of the screen
+  mov ys, 190
+  mov xs2, 10
+  mov ys2, 190
 
 main:
   call my_character
@@ -842,19 +946,65 @@ movdown2:
 
 help_main: ;the painting area (does'nt change the name because I don't want to change the name in all the code)
   ; call make_screen
-  mov al, [first_tav]
-  mov ah, [final_tav]
-  cmp al, ah
-  jne regular_paint
-  call red_to_yellow
+  ; mov al, [first_tav]
+  ; mov ah, [final_tav]
+  ; cmp al, ah
+  jmp regular_paint
+  mov [colorg1], 4
+  mov [colorg2], 0eh
+  call color_to_color
   jmp main
 
-regular_paint: 
-  mov number_of_runns, 0
+regular_paint: ;first check if the area bigger than we can paint
+  mov [number_of_runns], 0
   call start_paint
+  mov [colors], 8
+  call paint_area2
+
+  ; grey to black
+  mov [colorg1], 8
+  mov [colorg2], 0
+  call color_to_color
+
+  cmp [number_of_runns], 32763
+  jl countinu_regular_paint
+
+  mov [number_of_runns], 0
+  call start_paintN
+  call paint_area2
+
+  ; grey to black
+  mov [colorg1], 8
+  mov [colorg2], 0
+  call color_to_color
+
+
+  cmp [number_of_runns], 32763
+  jl countinu_regular_paint
+
+  mov [number_of_runns], 0
+  mov [colors], 0eh
+  
+  ; red to black
+  mov [colorg1], 4
+  mov [colorg2], 0
+  call color_to_color
+
+  call make_screen
+
+  jmp main
+
+countinu_regular_paint:
+  mov [colors], 0eh
+  mov number_of_runns, 0
   call paint_area2
   ; jmp mainloop
-  call red_to_yellow
+
+  ; red to black
+  mov [colorg1], 4
+  mov [colorg2], 0eh
+  call color_to_color
+
   jmp main
 
 movright2:
@@ -929,7 +1079,8 @@ movleft2:
 
 mainloop:
   jmp mainloop
-exit :
+exit:
+  jmp start
   mov ax, 4c00h
   int 21h
 END start
