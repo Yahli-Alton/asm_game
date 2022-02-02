@@ -397,7 +397,7 @@ proc red_to_yellow
   upy:
     mov [xs2], 10    
     sub [ys2], 1
-    cmp [ys2], 10
+    cmp [ys2], 9
     je endpaint
     jmp loopaint
 
@@ -412,33 +412,79 @@ proc start_paint ;where to start painting ;right now not ready
   mov ax, starty
   mov [painty], ax
 
+
+
   mov al, [first_tav]
   mov ah, [final_tav]
   cmp al, 1
-  je up_down_paint
+  je up_paint
+  cmp al, 2
+  je down_paint
+  cmp al, 3
+  je right_paint
+  cmp al, 4
+  je left_paint
+  jmp exit
 
-up_down_paint:
+up_paint:
   mov ax, [x]
   cmp ax, [startx]
-  jg up_down_right
-  jl up_down_left
+  jg up_right
+  jl up_left
+  jmp exit
 
-up_down_right:
+up_right:
   sub [painty], 2
   add [paintx], 2
   ret
 
-up_down_left:
+up_left:
   sub [painty], 2
   ret
 
-  mov ax, startx
-  mov [paintx], ax
-  ; add [paintx], 1
-  mov ax, starty
-  mov [painty], ax
+down_paint:
+  mov ax, [x]
+  cmp ax, [startx]
+  jg down_right
+  jl down_left
+  jmp exit
+
+down_right:
+  add [paintx], 2
+  ret
+down_left:
+  ret
+
+right_paint:
+  mov ax, [y]
+  cmp ax, [starty]
+  jg right_down
+  jl right_up
+  jmp exit
+
+right_down:
+  add [paintx], 2
+  ret
+
+right_up:
+  add [paintx], 2
   sub [painty], 2
   ret
+
+left_paint:
+  mov ax, [y]
+  cmp ax, [starty]
+  jg left_down
+  jl left_up
+  jmp exit
+
+left_down:
+  ret
+
+left_up:
+  sub [painty], 2
+  ret
+
 endp start_paint
 start:
   mov ax, @data
