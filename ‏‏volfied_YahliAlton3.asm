@@ -82,7 +82,7 @@ proc paint_area2 ; alagorithm flood_fill
   
   ; cmp al, 7
   ; je end_func
-  
+
   ; paint
   mov bh,0h
   mov cx,[paintx]
@@ -112,18 +112,6 @@ proc paint_area2 ; alagorithm flood_fill
     mov [stopy], ax
     mov [is_complete_paint], 0
 
-    mov bh,0h
-    mov cx,[paintx]
-    mov dx,[painty]
-    mov al,[colord2]
-    mov ah,0ch
-    int 10h
-    mov ah,00h
-    int 16h
-
-    mov dl, 48
-    mov ah, 02h
-    int 21h
   end_func:  
     pop dx ;get paintyaaaa
     pop cx ;get paintx
@@ -991,35 +979,34 @@ help13:
   jmp countinu_regular_paint
 
 regular_paint: ;first check if the area bigger than we can paint
-  ; mov [number_of_runns], 0
-  ; call start_paint
-  ; mov [colors], 8
-  ; call paint_area2
+  mov [number_of_runns], 0
+  call start_paint
+  mov [colors], 8
+  call paint_area2
 
-  ; ; grey to black
-  ; mov [colorg1], 8
-  ; mov [colorg2], 0
-  ; call color_to_color
+  ; grey to black
+  mov [colorg1], 8
+  mov [colorg2], 0
+  call color_to_color
 
-  ; cmp [number_of_runns], 20000
-  ; jl help13 ;jmp to countinu_regular_paint 
+  cmp [number_of_runns], 20000
+  jl help13 ;jmp to countinu_regular_paint 
 
-  ; mov [number_of_runns], 0
-  ; call start_paintN
-  ; call paint_area2
+  mov [number_of_runns], 0
+  call start_paintN
+  call paint_area2
 
-  ; ; grey to black
-  ; mov [colorg1], 8
-  ; mov [colorg2], 0
-  ; call color_to_color
+  ; grey to black
+  mov [colorg1], 8
+  mov [colorg2], 0
+  call color_to_color
 
 
-  ; cmp [number_of_runns], 20000
-  ; jl countinu_regular_paint
+  cmp [number_of_runns], 20000
+  jl countinu_regular_paint
 
-  ; mov [number_of_runns], 0
-  ; mov [colors], 0eh
-  ; until here
+  mov [number_of_runns], 0
+  mov [colors], 0eh
   
   ; ; red to black
   ; mov [colorg1], 4
@@ -1037,61 +1024,7 @@ endless_paint: ;paint again and again until we paint all the area
   mov ax, [stopy]
   mov [painty], ax
   ; painting
-  mov bh,0h
-  mov cx,[paintx]
-  mov dx,[painty]
-  mov al,[colord]
-  mov ah,0ch
-  int 10h
-  mov ah,00h
-  int 16h
   call paint_area2
-  add [paintx], 1
-  mov bh,0h
-  mov cx,[paintx]
-  mov dx,[painty]
-  mov al,[colord]
-  mov ah,0ch
-  int 10h
-  mov ah,00h
-  int 16h
-  call paint_area2
-  sub [paintx], 2
-  mov bh,0h
-  mov cx,[paintx]
-  mov dx,[painty]
-  mov al,[colord]
-  mov ah,0ch
-  int 10h
-  call paint_area2
-  add [paintx], 1 ;return paintx to default
-  add [painty], 1
-  mov bh,0h
-  mov cx,[paintx]
-  mov dx,[painty]
-  mov al,[colord]
-  mov ah,0ch
-  int 10h
-  call paint_area2
-  sub [painty], 2
-  mov bh,0h
-  mov cx,[paintx]
-  mov dx,[painty]
-  mov al,[colord]
-  mov ah,0ch
-  int 10h
-  call paint_area2
-
-  ; mov bh,0h
-  ; mov cx,[startx]
-  ; mov dx,[starty]
-  ; mov al,[colord]
-  ; mov ah,0ch
-  ; int 10h
-  mov dl, 48
-  add dl, 3
-  mov ah, 02h
-  int 21h
 
   cmp [is_complete_paint], 0
   je help14  ;jmp to endless_paint
