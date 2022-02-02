@@ -21,6 +21,14 @@ i dw 0
 number_of_runns dw 0
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
 
+; booleans: 
+;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
+first_tav db 0
+
+;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
+final_tav db 0
+
+
 
 CODESEG
 proc paint_area2 ; alagorithm flood_fill
@@ -401,6 +409,31 @@ endp red_to_yellow
 proc start_paint ;where to start painting ;right now not ready
   mov ax, startx
   mov [paintx], ax
+  mov ax, starty
+  mov [painty], ax
+
+  mov al, [first_tav]
+  mov ah, [final_tav]
+  cmp al, 1
+  je up_down_paint
+
+up_down_paint:
+  mov ax, [x]
+  cmp ax, [startx]
+  jg up_down_right
+  jl up_down_left
+
+up_down_right:
+  sub [painty], 2
+  add [paintx], 2
+  ret
+
+up_down_left:
+  sub [painty], 2
+  ret
+
+  mov ax, startx
+  mov [paintx], ax
   ; add [paintx], 1
   mov ax, starty
   mov [painty], ax
@@ -492,6 +525,7 @@ space: ; first space move
   mov ax, [y]
   mov [starty], ax
 
+
   mov ah,00h
   int 16h
   cmp al, 'w'
@@ -525,9 +559,9 @@ movup_first:
   add bx, 7
   mov dl, [bx]
   cmp dl, 0eh
-  je space
+  je space ;jmp to space
 
-
+  mov [first_tav], 1
 
   ; move
   call delete_char2
@@ -548,7 +582,7 @@ movup_first:
 
 movdown_first:
   cmp [y], 191 ;checks if gets outside the screen
-  je space
+  je help5 ;jmp to space
   
   ; checks if we already go to yellow
   mov bx, offset my_zone
@@ -557,6 +591,7 @@ movdown_first:
   cmp dl, 0eh
   je help5 ;jmp to space
 
+  mov [first_tav], 2
   ; move
   call delete_char2
   add [y], 2
@@ -574,6 +609,9 @@ movdown_first:
 
   jmp space_main
 
+help5:
+  jmp space
+
 movleft_first:
   cmp [x], 9 ;checks if gets outside the screen
   je help5 ;jmp to space
@@ -584,6 +622,8 @@ movleft_first:
   mov dl, [bx]
   cmp dl, 0eh
   je help5
+
+  mov [first_tav], 4
 
   ; move
   call delete_char2
@@ -602,8 +642,6 @@ movleft_first:
   
   jmp space_main
 
-help5:
-  jmp space
 
 movright_first:
   cmp [x], 309 ;checks if gets outside the screen
@@ -615,6 +653,8 @@ movright_first:
   mov dl, [bx]
   cmp dl, 0eh
   je help5
+
+  mov [first_tav], 3
 
   ; move
   call delete_char2
@@ -715,6 +755,7 @@ movup2:
   ; mov al, [bx] ;save to al the color
   ; cmp al, 0eh
   ; je help_main  ;jmp to main
+  mov final_tav, 1
   jmp space_main
 
 help11:
@@ -750,12 +791,19 @@ movdown2:
   ; mov al, [bx] ;save to al the color
   ; cmp al, 0eh
   ; je help_main  ;jmp to main
-  
+  mov final_tav, 2
   jmp space_main
 
-help_main:
+help_main: ;the painting area (does'nt change the name because I don't want to change the name in all the code)
   ; call make_screen
-  
+  mov al, [first_tav]
+  mov ah, [final_tav]
+  cmp al, ah
+  jne regular_paint
+  call red_to_yellow
+  jmp main
+
+regular_paint: 
   mov number_of_runns, 0
   call start_paint
   call paint_area2
@@ -792,7 +840,8 @@ movright2:
   ; add bx, 3
   ; mov al, [bx] ;save to al the color
   ; cmp al, 0eh
-  ; je help_main  ;jmp to main
+  ; je help_main  ;jmp to main'
+  mov final_tav, 3
   jmp space_main
 movleft2:
   call delete_char2
@@ -827,6 +876,7 @@ movleft2:
   ; mov al, [bx] ;save to al the color
   ; cmp al, 0eh
   ; je help_main  ;jmp to main
+  mov final_tav, 4
   jmp space_main
 
 
