@@ -599,7 +599,80 @@ proc start_paintN ;negative form of start_paint ;we change jg to jl and jl to jg
 
 endp start_paintN
 
+proc start_paint1
+  mov ax, startx
+  mov [paintx], ax
+  mov ax, starty
+  mov [painty], ax
 
+  mov al, [first_tav]
+  mov ah, [final_tav]
+  cmp al, 1
+  je up_right3
+  cmp al, 2
+  je down_right3
+  cmp al, 3
+  je right_down3
+  cmp al, 4
+  je left_down3
+  jmp exit
+
+
+  up_right3:
+    sub [painty], 2
+    add [paintx], 2
+    ret
+
+  down_right3:
+    add [paintx], 2
+    ret
+
+  right_down3:
+    add [paintx], 2
+    ret
+
+
+  left_down3:
+    ret
+
+
+endp start_paint1
+
+proc start_paint2
+  mov ax, startx
+  mov [paintx], ax
+  mov ax, starty
+  mov [painty], ax
+
+  mov al, [first_tav]
+  mov ah, [final_tav]
+  cmp al, 1
+  je up_left3
+  cmp al, 2
+  je down_left3
+  cmp al, 3
+  je right_up3
+  cmp al, 4
+  je left_up3
+  jmp exit
+
+  up_left3:
+    sub [painty], 2
+    ret
+
+  down_left3:
+    ret
+
+  right_up3:
+    add [paintx], 2
+    sub [painty], 2
+    ret
+
+
+  left_up3:
+  sub [painty], 2
+  ret
+endp start_paint2
 
 
 start:
@@ -965,22 +1038,35 @@ movdown2:
   jmp space_main
 
 help_main: ;the painting area (does'nt change the name because I don't want to change the name in all the code)
+
+  ; check if we get to the same cords:
+  mov ax, [x]
+  cmp ax, [startx]
+  je check2
   ; call make_screen
   ; mov al, [first_tav]
   ; mov ah, [final_tav]
   ; cmp al, ah
+countinu_help_main:
   jmp regular_paint
   mov [colorg1], 4
   mov [colorg2], 0eh
   call color_to_color
   jmp main
 
+check2:
+  mov ax, [y]
+  cmp ax, [starty]
+  je help11
+  jmp countinu_help_main
+
+
 help13: 
   jmp countinu_regular_paint
 
 regular_paint: ;first check if the area bigger than we can paint
   mov [number_of_runns], 0
-  call start_paint
+  call start_paint1
   mov [colors], 8
   call paint_area2
 
@@ -993,7 +1079,7 @@ regular_paint: ;first check if the area bigger than we can paint
   jl help13 ;jmp to countinu_regular_paint 
 
   mov [number_of_runns], 0
-  call start_paintN
+  call start_paint2
   call paint_area2
 
   ; grey to black
@@ -1014,7 +1100,7 @@ regular_paint: ;first check if the area bigger than we can paint
   ; call color_to_color
 
   ; call make_screen
-  call start_paint
+  call start_paint1
   call paint_area2
 endless_paint: ;paint again and again until we paint all the area
   mov [number_of_runns], 0
@@ -1036,7 +1122,7 @@ endless_paint: ;paint again and again until we paint all the area
 
   jmp main
 help14: 
-jmp endless_paint
+  jmp endless_paint
 
 countinu_regular_paint:
   mov [colors], 0eh
