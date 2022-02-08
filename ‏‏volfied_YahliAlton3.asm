@@ -34,7 +34,7 @@ sum_pixels dw 530 ;the number of pixels is 53,044
 
 count_paint db 0 ;count the number of paint use in paint_function
 
-precent_per_paint db 9
+precent_per_paint db 20
 
 paint1_precent dw 0
 paint2_precent dw 0
@@ -78,9 +78,9 @@ proc paint_area2 ; alagorithm flood_fill
   cmp al, 8
   je help12 ; jmp to end_func
   ;32763
-  cmp [number_of_runns], 5000
+  cmp [number_of_runns], 10600
   jg help12 ; jmp to end_func
-  cmp [number_of_runns], 5000
+  cmp [number_of_runns], 10600
   je max_run
 
   
