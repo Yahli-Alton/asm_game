@@ -705,6 +705,7 @@ proc print_precents
   int 21h
   
   ret
+endp print_precents
 
 start:
   mov ax, @data
