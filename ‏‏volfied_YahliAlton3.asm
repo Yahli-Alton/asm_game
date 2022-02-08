@@ -30,8 +30,18 @@ index dw 0
 i dw 0
 number_of_runns dw 0
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
-sum_pixels dw 53044
+sum_pixels dw 530 ;the number of pixels is 53,044
 
+count_paint db 0 ;count the number of paint use in paint_function
+
+precent_per_paint db 9
+
+paint1_precent dw 0
+paint2_precent dw 0
+
+screen_paint_precent dw 0
+
+; max dw 65535 ; the maximum value we can put in dw
 
 ; booleans: 
 ;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
@@ -68,15 +78,9 @@ proc paint_area2 ; alagorithm flood_fill
   cmp al, 8
   je help12 ; jmp to end_func
   ;32763
-  cmp [number_of_runns], 20000
+  cmp [number_of_runns], 5000
   jg help12 ; jmp to end_func
-  cmp [number_of_runns], 19997
-  je max_run
-  cmp [number_of_runns], 19998
-  je max_run
-  cmp [number_of_runns], 19999
-  je max_run
-  cmp [number_of_runns], 20000
+  cmp [number_of_runns], 5000
   je max_run
 
   
@@ -91,21 +95,24 @@ proc paint_area2 ; alagorithm flood_fill
   mov ah,0ch
   int 10h
   
-  add [number_of_runns], 4
+  add [number_of_runns], 1
   ; go to all 4 directions
+  ; right
   add [paintx], 1
   call paint_area2
-  sub [paintx], 2
+  sub [paintx], 1
+  sub [painty], 1 ;up
   call paint_area2
-  add [paintx], 1 ;return paintx to default
   add [painty], 1
-  call paint_area2
-  sub [painty], 2
-  call paint_area2
+  sub [paintx], 1
+  call paint_area2 ;left
+  add [paintx], 1
+  add [painty], 1
+  call paint_area2 ;down
   jmp end_func
 
   max_run:
-    add [number_of_runns], 10
+    add [number_of_runns], 1
     mov ax, [paintx]
     mov [stopx], ax
     mov ax, [painty]
@@ -392,7 +399,7 @@ proc print_array ;for debug
   pop bx
   pop cx
   pop ax
-  pop dx
+  pop dx 
   ret
 endp print_array
 
@@ -674,6 +681,30 @@ proc start_paint2
   ret
 endp start_paint2
 
+proc print_precents
+  mov ax, [screen_paint_precent]
+  mov bl, 10
+  div bl
+  
+  ; al = ax div 10 = a_ (first char)
+  ; ah = ax mod 10 = _a (last char)
+  mov bl, al
+  mov bh, ah
+
+  ; go to thee start of the line
+  mov dl, 13
+  mov ah, 2
+  int 21h
+  
+  mov dl, 48
+  add dl, bl
+  int 21h
+  
+  mov dl, 48
+  add dl, bh
+  int 21h
+  
+  ret
 
 start:
   mov ax, @data
@@ -693,6 +724,14 @@ start:
   mov ys, 190
   mov xs2, 10
   mov ys2, 190
+  mov screen_paint_precent, 0
+  
+  call print_precents
+  ; print % in the end
+  mov dl, 37
+  mov ah, 2
+  int 21h
+  
 
 main:
   call my_character
@@ -1060,48 +1099,128 @@ check2:
   je help11
   jmp countinu_help_main
 
-
-help13: 
-  jmp countinu_regular_paint
-
 regular_paint: ;first check if the area bigger than we can paint
   mov [number_of_runns], 0
-  call start_paint1
   mov [colors], 8
+
+  mov [is_complete_paint], 1
+  call start_paint1
+  call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint1  ;jmp to endless_paint
+  jmp continue_regular_paint1
+endless_paint1: ;paint again and again until we paint all the area
+  mov [number_of_runns], 0
+  mov [is_complete_paint], 1
+  add [count_paint], 1
+  mov ax, [stopx]
+  mov [paintx], ax
+  mov ax, [stopy]
+  mov [painty], ax
+  ; painting
   call paint_area2
 
+  cmp [is_complete_paint], 0
+  je endless_paint1  ;jmp to endless_paint
+
+continue_regular_paint1:
   ; grey to black
   mov [colorg1], 8
   mov [colorg2], 0
   call color_to_color
 
-  cmp [number_of_runns], 20000
-  jl help13 ;jmp to countinu_regular_paint 
+  mov bl, [count_paint]
+  mov al, [precent_per_paint]
+  mul bl
+  ; ax = al * bl
+  mov [paint1_precent], ax
+  
+  mov dx, 0
+  mov ax, [number_of_runns]
+  mov bx, [sum_pixels]
+  div bx
+	; ax = ax dv bx
+  add [paint1_precent], ax
+
+;;;;;;;;
 
   mov [number_of_runns], 0
+  mov [colors], 8
+
+  mov [is_complete_paint], 1
   call start_paint2
   call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint2  ;jmp to endless_paint
+  jmp continue_regular_paint2
+endless_paint2: ;paint again and again until we paint all the area
+  mov [number_of_runns], 0
+  mov [is_complete_paint], 1
+  add [count_paint], 1
 
+  mov ax, [stopx]
+  mov [paintx], ax
+  mov ax, [stopy]
+  mov [painty], ax
+  ; painting
+  call paint_area2
+
+  cmp [is_complete_paint], 0
+  je endless_paint2  ;jmp to endless_paint
+
+continue_regular_paint2:
   ; grey to black
   mov [colorg1], 8
   mov [colorg2], 0
   call color_to_color
 
+  mov bl, [count_paint]
+  mov al, [precent_per_paint]
+  mul bl
+  ; ax = al * bl
+  mov [paint2_precent], ax
 
-  cmp [number_of_runns], 20000
-  jl countinu_regular_paint
+  mov dx, 0
+  ; additing the rest precent (from the last paint)
+  mov ax, [number_of_runns]
+  mov bx, [sum_pixels]
+	div bx
+	; ax = ax dv bx
+  
+  add [paint2_precent], ax
 
   mov [number_of_runns], 0
-  mov [colors], 0eh
-  
-  ; ; red to black
-  ; mov [colorg1], 4
-  ; mov [colorg2], 0
-  ; call color_to_color
+  mov [colors], 0eh  
 
-  ; call make_screen
+
+  mov ax, [paint2_precent]
+  cmp ax, [paint1_precent]
+  jl start_endless_paint2
+
+start_endless_paint1:
+  mov ax, [paint1_precent]
+  add [screen_paint_precent], ax
+  mov [is_complete_paint], 1
   call start_paint1
   call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint  ;jmp to endless_paint
+  jmp end_regular_paint
+
+start_endless_paint2:
+  mov ax, [paint2_precent]
+  add [screen_paint_precent], ax
+  mov [is_complete_paint], 1
+  call start_paint2
+  call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint  ;jmp to endless_paint
+  jmp end_regular_paint
+
 endless_paint: ;paint again and again until we paint all the area
   mov [number_of_runns], 0
   mov [is_complete_paint], 1
@@ -1115,27 +1234,18 @@ endless_paint: ;paint again and again until we paint all the area
   cmp [is_complete_paint], 0
   je help14  ;jmp to endless_paint
 
+end_regular_paint:
+
     ; red to yellow
   mov [colorg1], 4
   mov [colorg2], 0eh
   call color_to_color
 
+  call print_precents
   jmp main
 help14: 
   jmp endless_paint
 
-countinu_regular_paint:
-  mov [colors], 0eh
-  mov number_of_runns, 0
-  call paint_area2
-  ; jmp mainloop
-  
-  ; red to yellow
-  mov [colorg1], 4
-  mov [colorg2], 0eh
-  call color_to_color
-
-  jmp main
 
 movright2:
   call delete_char2
