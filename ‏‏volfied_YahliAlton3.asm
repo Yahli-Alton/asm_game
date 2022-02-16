@@ -1695,7 +1695,7 @@ movleft2:
 mainloop:
   jmp mainloop
 exit:
-  jmp start
+  ; jmp start
   mov ax, 4c00h
   int 21h
 END start
