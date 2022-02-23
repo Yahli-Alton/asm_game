@@ -24,6 +24,8 @@ colord db 2 ;for debug
 colord2 db 5
 colorg1 db 4 ;color
 colorg2 db 0eh ;to color
+enemy_color db 5
+
 
 ; other:
 index dw 0
@@ -52,10 +54,14 @@ final_tav db 0
 
 is_complete_paint db 0
 
+enemy1_character db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h
+enemy_index dw 0
+
+xe dw 50 ; enemy x cord
+ye dw 50 ; enemy y
 
 
 CODESEG
-
 
 help12:
   jmp end_func
@@ -129,6 +135,11 @@ proc paint_area2 ; alagorithm flood_fill
     ret
 
 endp paint_area2
+
+proc delay
+  push cx
+  pop cx
+endp delay
 
 proc my_character ; מציירת קוביה
   push [x]
@@ -215,40 +226,6 @@ proc my_character ; מציירת קוביה
   pop [x]
   ret
 endp my_character 
-proc delete_char ; מוחק את הקוביה
-  mov [color], 0
-  call my_character
-  mov [color], 7
-  ; mov bh,0h
-  ; mov cx,[x]
-  ; add cx, 1
-  ; mov dx,[y]
-  ; mov al,[color2]
-  ; mov ah,0ch
-  ; int 10h
-  ; mov bh,0h
-  ; mov cx,[x]
-  ; sub cx, 1
-  ; mov dx,[y]
-  ; mov al,[color2]
-  ; mov ah,0ch
-  ; int 10h
-  ; mov bh,0h
-  ; mov cx,[x]
-  ; mov dx,[y]
-  ; add dx, 1
-  ; mov al,[color2]
-  ; mov ah,0ch
-  ; int 10h
-  ; mov bh,0h
-  ; mov cx,[x]
-  ; mov dx,[y]
-  ; sub dx, 1
-  ; mov al,[color2]
-  ; mov ah,0ch
-  ; int 10h
-  ret
-endp delete_char
 proc delete_char2
   push [x]
   push [y]
@@ -707,6 +684,250 @@ proc print_precents
   ret
 endp print_precents
 
+proc enemy_character
+  push [xe]
+  push [ye]
+  mov [enemy_index], 0
+    ; שמירה
+  mov bh, 0h
+  mov cx, [xe]
+  mov dx, [ye]
+  mov ah, 0dh
+  int 10h
+    ;שמירה במערך
+  mov bx, offset enemy_character
+  add bx, [enemy_index]
+  mov [bx], al
+  add [enemy_index], 1
+  
+    ; ציור
+  mov bh, 0h
+  mov cx, [xe]
+  mov dx, [ye]
+  mov al,[enemy_color]
+  mov ah,0ch
+  int 10h
+  
+  sub [xe], 1
+  add [ye], 1
+
+  mov cx, 3
+  loopXP3: ;מעלה את x
+    ; שמירה
+    push cx
+    mov bh, 0h
+    mov cx, [xe]
+    mov dx, [ye]
+    mov ah, 0dh
+    int 10h
+    ;שמירה במערך
+    mov bx, offset enemy_character
+    add bx, [enemy_index]
+    mov [bx], al
+    add [enemy_index], 1
+    ; ציור
+    mov bh, 0h
+    mov cx, [xe]
+    mov dx, [ye]
+    mov al,[enemy_color]
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe],1
+    loop loopXP3
+  ; שינוי מיקום
+  add [ye], 1
+  mov cx, 5
+  loopXN2: ;מוריד את x
+    push cx
+    
+    mov bh, 0h
+    mov cx, [xe]
+    mov dx, [ye]
+    mov ah, 0dh
+    int 10h
+    ;שמירה במערך
+    mov bx, offset enemy_character
+    add bx, [enemy_index]
+    mov [bx], al
+    add [enemy_index], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe]
+    mov dx,[ye]
+    mov al,[enemy_color]
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe],-1
+    loop loopXN2
+  add [ye], 1
+  add [xe], 2
+  mov cx, 3
+  loopXP4: ;מעלה את x
+    ; שמירה
+    push cx
+    mov bh, 0h
+    mov cx, [xe]
+    mov dx, [ye]
+    mov ah, 0dh
+    int 10h
+    ;שמירה במערך
+    mov bx, offset enemy_character
+    add bx, [enemy_index]
+    mov [bx], al
+    add [enemy_index], 1
+    ; ציור
+    mov bh, 0h
+    mov cx, [xe]
+    mov dx, [ye]
+    mov al,[enemy_color]
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe],1
+    loop loopXP4
+  ; שינוי מיקום
+  add [ye], 1
+  sub [xe], 2  
+
+    ; שמירה
+  mov bh, 0h
+  mov cx, [xe]
+  mov dx, [ye]
+  mov ah, 0dh
+  int 10h
+    ;שמירה במערך
+  mov bx, offset enemy_character
+  add bx, [enemy_index]
+  mov [bx], al
+  add [enemy_index], 1
+  
+    ; ציור
+  mov bh, 0h
+  mov cx, [xe]
+  mov dx, [ye]
+  mov al,[enemy_color]
+  mov ah,0ch
+  int 10h
+
+
+  pop [ye]
+  pop [xe]
+  ret
+endp enemy_character
+
+proc enemy_delete
+  push [xe]
+  push [ye]
+  mov [enemy_index], 0
+  ; קליטה מהמערך
+  mov bx, offset enemy_character
+  add bx, [enemy_index]
+  mov al, [bx] ;save to al the color
+  add [enemy_index], 1
+  ; ציור
+  mov bh,0h
+  mov cx,[xe]
+  mov dx,[ye]
+  ; the color is - al
+  mov ah,0ch
+  int 10h
+  
+  sub [xe], 1
+  add [ye], 1
+
+  mov cx, 3
+  loopDXP3: ;מעלה את x
+    ; שמירה
+    push cx
+    ; קליטה מהמערך
+    mov bx, offset enemy_character
+    add bx, [enemy_index]
+    mov al, [bx] ;save to al the color
+    add [enemy_index], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe]
+    mov dx,[ye]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe],1
+    loop loopDXP3
+  ; שינוי מיקום
+  add [ye], 1
+  mov cx, 5
+  loopDXN2: ;מוריד את x
+    push cx
+    
+    ; קליטה מהמערך
+    mov bx, offset enemy_character
+    add bx, [enemy_index]
+    mov al, [bx] ;save to al the color
+    add [enemy_index], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe]
+    mov dx,[ye]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe],-1
+    loop loopDXN2
+  add [ye], 1
+  add [xe], 2
+  mov cx, 3
+  loopDXP4: ;מעלה את x
+    ; שמירה
+    push cx
+    ; קליטה מהמערך
+    mov bx, offset enemy_character
+    add bx, [enemy_index]
+    mov al, [bx] ;save to al the color
+    add [enemy_index], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe]
+    mov dx,[ye]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe],1
+    loop loopDXP4
+  ; שינוי מיקום
+  add [ye], 1
+  sub [xe], 2  
+
+  ; קליטה מהמערך
+  mov bx, offset enemy_character
+  add bx, [enemy_index]
+  mov al, [bx] ;save to al the color
+  add [enemy_index], 1
+  ; ציור
+  mov bh,0h
+  mov cx,[xe]
+  mov dx,[ye]
+  ; the color is - al
+  mov ah,0ch
+  int 10h
+
+
+  pop [ye]
+  pop [xe]
+  ret
+endp enemy_delete
+
+
+run_screen:
+  call enemy_delete
+  add [xe], 1
+  call enemy_character
+  jmp check_press
+
 start:
   mov ax, @data
   mov ds, ax
@@ -733,9 +954,18 @@ start:
   mov ah, 2
   int 21h
   
+  call enemy_character
 
 main:
   call my_character
+
+check_press:
+  mov ah, 01h
+  int 16h
+  jnz pressed
+  jmp run_screen
+
+pressed:
   ; call print_array
   mov ah,00h
   int 16h
@@ -1321,7 +1551,7 @@ movleft2:
 mainloop:
   jmp mainloop
 exit:
-  jmp start
+  ; jmp start
   mov ax, 4c00h
   int 21h
 END start
