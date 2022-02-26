@@ -396,6 +396,7 @@ proc print_array2 ;for debug ;for enemey_character
     ; sub bx, 1
     mov dl, 48
     add dl, [bx]
+    
     mov ah, 02h
     int 21h
     mov dl, ' '
@@ -973,11 +974,6 @@ proc my_delay2
   ret
 
 
-my_arr:
-  call print_array2
-  jmp countinu4
-
-
 run_screen:
   call enemy_delete
   ; moving enemy
@@ -990,53 +986,94 @@ run_screen:
   call my_delay2
 
   ; change speed:
-;   mov ah, 00h
-;   int 16h
-;   cmp al, 'p'
-;   je my_arr
+  mov bx, offset enemy1_character
+  add bx, 6
+  mov ax, [bx]
+  cmp al, 0eh
+  je delete_enemy2
 
-countinu4:
+after_delete_enemy:
+
   mov bx, offset enemy1_character
   mov ax, [bx]
   cmp ax, 0eh
-  je changey
+  je changey1
+
+after_changey1:
   
   add bx, 4
   mov ax, [bx]
   cmp ax, 0eh
-  je changex
+  je changex1
+
+after_changex1:
 
   add bx, 4
   mov ax, [bx]
   cmp ax, 0eh
-  je changex
+  je changex2
+
+after_changex2:
   
   mov bx, offset enemy1_character
-  add bx, 11
+  add bx, 12
   mov ax, [bx]
-  cmp ax, 0eh
-  je changey
+  cmp al, 0eh
+  je changey2
 
-  
+
+after_changey2:
+
   jmp check_press
 
-changey:
+changey1:
   neg [speedy]
-  
-  mov dl, 48
-  mov ah, 2
-  int 21h
 
-  jmp check_press
 
-changex:
+  jmp after_changey1
+
+changey2:
+  neg [speedy]
+
+  jmp after_changey2
+
+changex1:
+  neg [speedx]
+
+  jmp after_changex1
+
+changex2:
   neg [speedx]
   
-  mov dl, 49
-  mov ah, 2
-  int 21h
-  
 
+  jmp after_changex2
+
+delete_enemy2:
+  call enemy_delete
+  ; paint the area the enemy was there in yellow:
+  mov ax, [speedx]
+  sub [xe], ax
+  sub [xe], ax
+  sub [xe], ax
+  mov ax, [speedy]
+  sub [ye], ax
+  mov cx, 13
+  mov bx, offset enemy1_character
+  loop_paint_yellow_enemy:
+    mov [bx], 0eh
+    add bx, 1
+    loop loop_paint_yellow_enemy
+
+  call enemy_delete
+  mov [xe], 0
+  mov [ye], 0
+  mov [speedx], 0
+  mov [speedy], 0
+  ; mov [bx], 0
+
+
+
+  call enemy_character
   jmp check_press
 
 start:
@@ -1071,6 +1108,7 @@ main:
   call my_character
 
 check_press:
+
   mov ah, 01h
   int 16h
   jnz pressed
