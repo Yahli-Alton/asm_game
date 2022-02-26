@@ -17,6 +17,8 @@ stopx dw 0 ;the last pixel we stop to paint
 stopy dw 0
 xe dw 50 ; enemy x cord
 ye dw 50 ; enemy y
+xe2
+ye2
 
 ; colors:
 color db 7
@@ -1039,6 +1041,7 @@ proc my_delay2
 endp my_delay2
 
 
+
 help15:
   jmp player_lose
 
@@ -1193,11 +1196,56 @@ start:
   mov ys, 190
   mov xs2, 10
   mov ys2, 190
-  mov screen_paint_precent, 0
-  mov xe, 50 ; enemy x cord
-  mov ye, 50 ; enemy y
-  mov speedx, 1
-  mov speedy, 1
+  mov startx, 0
+  mov starty, 0 ;the cords when pressing space
+  mov paintx, 0
+  mov painty, 0
+  mov stopx, 0 ;the last pixel we stop to paint
+  mov stopy, 0
+  mov xe , 50 ; enemy x cord
+  mov ye , 50 ; enemy y
+
+  ; colors:
+  mov color , 7
+  mov color2 , 4 ; צבע השובל
+  mov colors , 0eh  ;צבע המסך
+  mov colord , 2 ;for debug
+  mov colord2 , 5
+  mov colorg1 , 4 ;color
+  mov colorg2 , 0eh ;to color
+  mov enemy_color , 5
+
+  ; f or precents caculate:
+  mov precent_per_paint , 20
+  mov sum_pixels , 530 ;the number of pixels is 53,044
+  mov count_paint , 0 ;count the number of paint use in paint_function
+  mov paint1_precent , 0
+  mov paint2_precent , 0
+  mov screen_paint_precent , 0
+
+
+
+  ; booleans: 
+  ;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
+  mov first_tav , 0
+  mov final_tav , 0
+
+  mov is_complete_paint , 0
+  mov is_space , 0 ; 0 - regular, 1 - first_space, 2 - space
+
+
+  ; other:
+  mov index , 0
+  mov i , 0
+  mov i2 , 0
+  mov number_of_runns , 0
+  ; max dw 65535 ; the maximum value we can put in dw
+  mov enemy_index , 0
+  mov DELAY , 10
+
+  mov speedx , 1
+  mov speedy , 1
+
   
   call print_precents
   ; print % in the end
