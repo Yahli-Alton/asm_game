@@ -44,6 +44,7 @@ first_tav db 0
 final_tav db 0
 
 is_complete_paint db 0
+is_space db 0 ; 0 - regular, 1 - first_space, 2 - space
 
 ; arrays:
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h ;my character
@@ -973,6 +974,8 @@ proc my_delay2
   pop cx
   ret
 
+help15:
+  jmp exit
 
 run_screen:
   call enemy_delete
@@ -985,18 +988,30 @@ run_screen:
   call enemy_character
   call my_delay2
 
+  ; check if in red line:
+  mov bx, offset enemy1_character
+  mov cx, 14
+red_check_loop:
+  mov ax, [bx]
+  cmp [bx], 4
+  je help15
+  add bx, 1
+  loop red_check_loop
+
   ; change speed:
   mov bx, offset enemy1_character
   add bx, 6
   mov ax, [bx]
-  cmp al, 0eh
+  cmp al, 0eh ; yellow
   je delete_enemy2
 
 after_delete_enemy:
 
   mov bx, offset enemy1_character
   mov ax, [bx]
-  cmp ax, 0eh
+  cmp ax, 0eh ; yellow
+  je changey1 ; or
+  cmp ax, 7   ; grey
   je changey1
 
 after_changey1:
@@ -1005,12 +1020,16 @@ after_changey1:
   mov ax, [bx]
   cmp ax, 0eh
   je changex1
+  cmp ax, 7   ; grey
+  je changex1
 
 after_changex1:
 
   add bx, 4
   mov ax, [bx]
   cmp ax, 0eh
+  je changex2
+  cmp ax, 7   ; grey
   je changex2
 
 after_changex2:
@@ -1020,11 +1039,26 @@ after_changex2:
   mov ax, [bx]
   cmp al, 0eh
   je changey2
+  cmp ax, 7   ; grey
+  je changey2
 
 
 after_changey2:
 
+  cmp [is_space], 1
+  je jmp_to_space
+
+  cmp [is_space], 2
+  je jmp_to_main_space
   jmp check_press
+
+jmp_to_space:
+  mov [is_space], 0
+  jmp check_press2
+
+jmp_to_main_space:
+  mov [is_space], 0
+  jmp check_press3
 
 changey1:
   neg [speedy]
@@ -1065,8 +1099,8 @@ delete_enemy2:
     loop loop_paint_yellow_enemy
 
   call enemy_delete
-  mov [xe], 0
-  mov [ye], 0
+  mov [xe], 10
+  mov [ye], 200
   mov [speedx], 0
   mov [speedy], 0
   ; mov [bx], 0
@@ -1190,7 +1224,15 @@ space: ; first space move
   mov ax, [y]
   mov [starty], ax
 
+check_press2:
 
+  mov ah, 01h
+  int 16h
+  jnz space_pressed
+  mov [is_space], 1
+  jmp run_screen
+
+space_pressed:
   mov ah,00h
   int 16h
   cmp al, 'w'
@@ -1341,11 +1383,22 @@ movright_first:
 
 space_main:
   call my_character
+  ; call delete_char2
+  ; call my_character
+
+check_press3:
+  mov ah, 01h
+  int 16h
+  jnz space_main_pressed
+  mov [is_space], 2
+  jmp run_screen
+
+space_main_pressed:
   call delete_char2
-  
   ; call print_array
+  ; call delete_char2
   mov bx, offset my_zone
-  mov cx, 10
+  mov cx, 9
 yellow_check_loop:
   ; mov ax, [bx]
   ; cmp [bx], 14
@@ -1364,7 +1417,7 @@ yellow_check_loop:
   ; like main
   ; call make_screen
   ; call print_array
-  call my_character
+  ; call my_character
   mov ah,00h
   int 16h
   cmp al, 'w'
@@ -1421,6 +1474,7 @@ movup2:
   ; cmp al, 0eh
   ; je help_main  ;jmp to main
   mov final_tav, 1
+  ; call my_character
   jmp space_main
 
 help11:
