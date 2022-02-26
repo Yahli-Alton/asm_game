@@ -15,6 +15,11 @@ paintx dw 0
 painty dw 0
 stopx dw 0 ;the last pixel we stop to paint
 stopy dw 0
+xe dw 50 ; enemy x cord
+ye dw 50 ; enemy y
+xe2 dw 100
+ye2 dw 100
+
 
 ; colors:
 color db 7
@@ -25,43 +30,59 @@ colord2 db 5
 colorg1 db 4 ;color
 colorg2 db 0eh ;to color
 enemy_color db 5
+enemy_color2 db 23
+
+; for precents caculate:
+precent_per_paint db 20
+sum_pixels dw 530 ;the number of pixels is 53,044
+count_paint db 0 ;count the number of paint use in paint_function
+paint1_precent dw 0
+paint2_precent dw 0
+screen_paint_precent dw 0
+
+
+
+; booleans: 
+;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
+first_tav db 0
+final_tav db 0
+
+is_complete_paint db 0
+is_space db 0 ; 0 - regular, 1 - first_space, 2 - space
+
+; arrays:
+my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h ;my character
+enemy1_character db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h
+enemy2_character db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h
 
 
 ; other:
 index dw 0
 i dw 0
+i2 dw 0
 number_of_runns dw 0
-my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
-sum_pixels dw 530 ;the number of pixels is 53,044
-
-count_paint db 0 ;count the number of paint use in paint_function
-
-precent_per_paint db 20
-
-paint1_precent dw 0
-paint2_precent dw 0
-
-screen_paint_precent dw 0
-
 ; max dw 65535 ; the maximum value we can put in dw
-
-; booleans: 
-;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
-first_tav db 0
-
-;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
-final_tav db 0
-
-is_complete_paint db 0
-
-enemy1_character db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h
 enemy_index dw 0
+enemy_index2 dw 0
 
-xe dw 50 ; enemy x cord
-ye dw 50 ; enemy y
+DELAY dw 10
 
+speedx dw 1
+speedy dw 1
+
+speedx2 dw 1 ; for enemy2
+speedy2 dw 1 ; for enemy2
+
+message2 db 10, 13, 10, 13, 10, 13, 'You win! GG', 10, 13, '$'
+
+message3 db "press 'e' to play again", 10, 13, '$'
+message4 db "or 'q' to exit$"
+
+message5 db 10, 13, 10, 13, 10, 13, 'You lose! better luck next time', 10, 13, '$'
 
 CODESEG
+
+jmp start
 
 help12:
   jmp end_func
@@ -81,7 +102,7 @@ proc paint_area2 ; alagorithm flood_fill
   je help12 ;jmp to end_func 
   cmp al, 0eh
   je help12 ; jmp to end_func
-  cmp al, 8
+  cmp al, 10h
   je help12 ; jmp to end_func
   ;32763
   cmp [number_of_runns], 10600
@@ -136,21 +157,6 @@ proc paint_area2 ; alagorithm flood_fill
 
 endp paint_area2
 
-proc delay
-    push cx
-    mov cx, 63000
-    None_loop:
-        loop None_loop
-    pop cx
-    ret
-endp delay
-
-proc delay2 ;get the delay from the cx
-    delay_loop:
-        call delay
-        loop delay_loop
-    ret
-endp delay2
 
 proc my_character ; מציירת קוביה
   push [x]
@@ -357,7 +363,7 @@ proc make_screen
     loop loopSYN
   ret
 endp make_screen
-proc print_array ;for debug
+proc print_array ;for debug ;for my_character
   push dx
   push ax
   push cx
@@ -390,6 +396,41 @@ proc print_array ;for debug
   pop dx 
   ret
 endp print_array
+
+proc print_array2 ;for debug ;for enemey_character
+  push dx
+  push ax
+  push cx
+  push bx
+  mov cx, 14
+  mov dh, 1
+  mov [i2], 0
+  loopP2:
+    mov dl, 48
+    add dl, dh
+    mov ah, 02h
+    int 21h
+    mov bx, offset enemy1_character
+    add bx, [i2]
+    ; sub bx, 1
+    mov dl, 48
+    add dl, [bx]
+    
+    mov ah, 02h
+    int 21h
+    mov dl, ' '
+    int 21h
+    add dh, 1
+    add [i2], 1
+    loop loopP2
+  mov dl, '-'
+  int 21h
+  pop bx
+  pop cx
+  pop ax
+  pop dx 
+  ret
+endp print_array2
 
 proc color_to_color
   mov [xs2], 10
@@ -691,9 +732,65 @@ proc print_precents
   mov dl, 48
   add dl, bh
   int 21h
-  
+
+  mov ax, [screen_paint_precent]
+  cmp ax, 75
+  jge player_win
+
   ret
 endp print_precents
+
+player_win:
+  push seg message2
+  
+  mov dx, offset message2
+  mov ah, 9h
+  int 21h
+
+  push seg message3
+  mov dx, offset message3
+  mov ah, 9h
+  int 21h
+
+  push seg message4
+  mov dx, offset message4
+  mov ah, 9h
+  int 21h
+
+check_start_or_exit:
+  mov ah, 00h
+  int 16h
+
+  cmp al, 'e'
+  je help16
+  cmp al, 'q'
+  je help17
+  jmp check_start_or_exit
+
+help16:
+  jmp start
+
+help17:
+  jmp exit
+
+player_lose:
+  push seg message5
+  
+  mov dx, offset message5
+  mov ah, 9h
+  int 21h
+
+  push seg message3
+  mov dx, offset message3
+  mov ah, 9h
+  int 21h
+
+  push seg message4
+  mov dx, offset message4
+  mov ah, 9h
+  int 21h
+  
+  jmp check_start_or_exit
 
 proc enemy_character
   push [xe]
@@ -706,7 +803,7 @@ proc enemy_character
   mov ah, 0dh
   int 10h
     ;שמירה במערך
-  mov bx, offset enemy_character
+  mov bx, offset enemy1_character
   add bx, [enemy_index]
   mov [bx], al
   add [enemy_index], 1
@@ -732,7 +829,7 @@ proc enemy_character
     mov ah, 0dh
     int 10h
     ;שמירה במערך
-    mov bx, offset enemy_character
+    mov bx, offset enemy1_character
     add bx, [enemy_index]
     mov [bx], al
     add [enemy_index], 1
@@ -758,7 +855,7 @@ proc enemy_character
     mov ah, 0dh
     int 10h
     ;שמירה במערך
-    mov bx, offset enemy_character
+    mov bx, offset enemy1_character
     add bx, [enemy_index]
     mov [bx], al
     add [enemy_index], 1
@@ -784,7 +881,7 @@ proc enemy_character
     mov ah, 0dh
     int 10h
     ;שמירה במערך
-    mov bx, offset enemy_character
+    mov bx, offset enemy1_character
     add bx, [enemy_index]
     mov [bx], al
     add [enemy_index], 1
@@ -809,10 +906,11 @@ proc enemy_character
   mov ah, 0dh
   int 10h
     ;שמירה במערך
-  mov bx, offset enemy_character
+  mov bx, offset enemy1_character
   add bx, [enemy_index]
   mov [bx], al
-  add [enemy_index], 1
+  ; add [enemy_index], 1
+
   
     ; ציור
   mov bh, 0h
@@ -828,12 +926,149 @@ proc enemy_character
   ret
 endp enemy_character
 
+
+proc enemy_character2
+  push [xe2]
+  push [ye2]
+  mov [enemy_index2], 0
+    ; שמירה
+  mov bh, 0h
+  mov cx, [xe2]
+  mov dx, [ye2]
+  mov ah, 0dh
+  int 10h
+    ;שמירה במערך
+  mov bx, offset enemy2_character
+  add bx, [enemy_index2]
+  mov [bx], al
+  add [enemy_index2], 1
+  
+    ; ציור
+  mov bh, 0h
+  mov cx, [xe2]
+  mov dx, [ye2]
+  mov al,[enemy_color2]
+  mov ah,0ch
+  int 10h
+  
+  sub [xe2], 1
+  add [ye2], 1
+
+  mov cx, 3
+  loopXP6: ;מעלה את x
+    ; שמירה
+    push cx
+    mov bh, 0h
+    mov cx, [xe2]
+    mov dx, [ye2]
+    mov ah, 0dh
+    int 10h
+    ;שמירה במערך
+    mov bx, offset enemy2_character
+    add bx, [enemy_index2]
+    mov [bx], al
+    add [enemy_index2], 1
+    ; ציור
+    mov bh, 0h
+    mov cx, [xe2]
+    mov dx, [ye2]
+    mov al,[enemy_color2]
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe2],1
+    loop loopXP6
+  ; שינוי מיקום
+  add [ye2], 1
+  mov cx, 5
+  loopXN3: ;מוריד את x
+    push cx
+    
+    mov bh, 0h
+    mov cx, [xe2]
+    mov dx, [ye2]
+    mov ah, 0dh
+    int 10h
+    ;שמירה במערך
+    mov bx, offset enemy2_character
+    add bx, [enemy_index2]
+    mov [bx], al
+    add [enemy_index2], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe2]
+    mov dx,[ye2]
+    mov al,[enemy_color2]
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe2],-1
+    loop loopXN3
+  add [ye2], 1
+  add [xe2], 2
+  mov cx, 3
+  loopXP5: ;מעלה את x
+    ; שמירה
+    push cx
+    mov bh, 0h
+    mov cx, [xe2]
+    mov dx, [ye2]
+    mov ah, 0dh
+    int 10h
+    ;שמירה במערך
+    mov bx, offset enemy2_character
+    add bx, [enemy_index2]
+    mov [bx], al
+    add [enemy_index2], 1
+    ; ציור
+    mov bh, 0h
+    mov cx, [xe2]
+    mov dx, [ye2]
+    mov al,[enemy_color2]
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe2],1
+    loop loopXP5
+  ; שינוי מיקום
+  add [ye2], 1
+  sub [xe2], 2  
+
+    ; שמירה
+  mov bh, 0h
+  mov cx, [xe2]
+  mov dx, [ye2]
+  mov ah, 0dh
+  int 10h
+    ;שמירה במערך
+  mov bx, offset enemy2_character
+  add bx, [enemy_index2]
+  mov [bx], al
+  ; add [enemy_index], 1
+
+  
+    ; ציור
+  mov bh, 0h
+  mov cx, [xe2]
+  mov dx, [ye2]
+  mov al,[enemy_color2]
+  mov ah,0ch
+  int 10h
+
+
+  pop [ye2]
+  pop [xe2]
+  ret
+endp enemy_character2
+
+
+
 proc enemy_delete
   push [xe]
   push [ye]
   mov [enemy_index], 0
   ; קליטה מהמערך
-  mov bx, offset enemy_character
+  mov bx, offset enemy1_character
   add bx, [enemy_index]
   mov al, [bx] ;save to al the color
   add [enemy_index], 1
@@ -853,7 +1088,7 @@ proc enemy_delete
     ; שמירה
     push cx
     ; קליטה מהמערך
-    mov bx, offset enemy_character
+    mov bx, offset enemy1_character
     add bx, [enemy_index]
     mov al, [bx] ;save to al the color
     add [enemy_index], 1
@@ -874,7 +1109,7 @@ proc enemy_delete
     push cx
     
     ; קליטה מהמערך
-    mov bx, offset enemy_character
+    mov bx, offset enemy1_character
     add bx, [enemy_index]
     mov al, [bx] ;save to al the color
     add [enemy_index], 1
@@ -895,7 +1130,7 @@ proc enemy_delete
     ; שמירה
     push cx
     ; קליטה מהמערך
-    mov bx, offset enemy_character
+    mov bx, offset enemy1_character
     add bx, [enemy_index]
     mov al, [bx] ;save to al the color
     add [enemy_index], 1
@@ -914,7 +1149,7 @@ proc enemy_delete
   sub [xe], 2  
 
   ; קליטה מהמערך
-  mov bx, offset enemy_character
+  mov bx, offset enemy1_character
   add bx, [enemy_index]
   mov al, [bx] ;save to al the color
   add [enemy_index], 1
@@ -932,639 +1167,1105 @@ proc enemy_delete
   ret
 endp enemy_delete
 
-my_code:
-    run_screen:
-    call enemy_delete
-    add [xe], 1
-    call enemy_character
-    mov cx, 10
-    call delay2
-    jmp check_press
 
-  start:
-    mov ax, @data
-    mov ds, ax
-    ; Graphic mode
-    mov ax, 13h
-    int 10h
-    ; screen
-    call make_screen
-    mov ah, 00h
-    int 16h
-    
-    ; variables for the game
-    mov x, 309 ; the cords of the character
-    mov y, 191
-    mov xs, 10 ; the cords of the screen
-    mov ys, 190
-    mov xs2, 10
-    mov ys2, 190
-    mov screen_paint_precent, 0
-    
-    call print_precents
-    ; print % in the end
-    mov dl, 37
-    mov ah, 2
-    int 21h
-    
-    call enemy_character
+proc enemy_delete2
+  push [xe2]
+  push [ye2]
+  mov [enemy_index2], 0
+  ; קליטה מהמערך
+  mov bx, offset enemy2_character
+  add bx, [enemy_index2]
+  mov al, [bx] ;save to al the color
+  add [enemy_index2], 1
+  ; ציור
+  mov bh,0h
+  mov cx,[xe2]
+  mov dx,[ye2]
+  ; the color is - al
+  mov ah,0ch
+  int 10h
+  
+  sub [xe2], 1
+  add [ye2], 1
 
-    main:
-    call my_character
-
-    check_press:
-    mov ah, 01h
-    int 16h
-    jnz pressed
-    jmp run_screen
-
-  pressed:
-    ; call print_array
-    mov ah,00h
-    int 16h
-    cmp al, 'w'
-    je movup
-    cmp al, 's'
-    je movdown
-    cmp al, 'a'
-    je movleft
-    cmp al, 'd'
-    je help ; help jump to movright
-    cmp al, ' '
-    je help2  ;jump to space
-    call delete_char2
-    jmp main
-    help:
-    jmp movright
-    help2:
-    jmp space
-    movup:
-    call delete_char2
-    mov bx, offset my_zone
-    add bx, 7
+  mov cx, 3
+  loopDXP5: ;מעלה את x
+    ; שמירה
+    push cx
+    ; קליטה מהמערך
+    mov bx, offset enemy2_character
+    add bx, [enemy_index2]
     mov al, [bx] ;save to al the color
-    cmp al, 0eh
-    Je paintUP
-    jmp main
+    add [enemy_index2], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe2]
+    mov dx,[ye2]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe2],1
+    loop loopDXP5
+  ; שינוי מיקום
+  add [ye2], 1
+  mov cx, 5
+  loopDXN3: ;מוריד את x
+    push cx
     
-    paintUP:  ; paint the shvil מצייר שובל
-    sub [y], 2
-    jmp main
-    
-    movdown:
-    call delete_char2
-    mov bx, offset my_zone
+    ; קליטה מהמערך
+    mov bx, offset enemy2_character
+    add bx, [enemy_index2]
+    mov al, [bx] ;save to al the color
+    add [enemy_index2], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe2]
+    mov dx,[ye2]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe2],-1
+    loop loopDXN3
+  add [ye2], 1
+  add [xe2], 2
+  mov cx, 3
+  loopDXP6: ;מעלה את x
+    ; שמירה
+    push cx
+    ; קליטה מהמערך
+    mov bx, offset enemy2_character
+    add bx, [enemy_index2]
+    mov al, [bx] ;save to al the color
+    add [enemy_index2], 1
+    ; ציור
+    mov bh,0h
+    mov cx,[xe2]
+    mov dx,[ye2]
+    ; the color is - al
+    mov ah,0ch
+    int 10h
+    pop cx
+    add [xe2],1
+    loop loopDXP6
+  ; שינוי מיקום
+  add [ye2], 1
+  sub [xe2], 2  
+
+  ; קליטה מהמערך
+  mov bx, offset enemy2_character
+  add bx, [enemy_index2]
+  mov al, [bx] ;save to al the color
+  add [enemy_index2], 1
+  ; ציור
+  mov bh,0h
+  mov cx,[xe2]
+  mov dx,[ye2]
+  ; the color is - al
+  mov ah,0ch
+  int 10h
+
+
+  pop [ye2]
+  pop [xe2]
+  ret
+endp enemy_delete2
+
+
+proc my_delay
+    push cx
+    mov cx, 63000
+    None_loop:
+        loop None_loop
+    pop cx
+    ret
+endp my_delay
+
+proc my_delay2
+  push cx
+  mov cx, [DELAY]
+  None_loop2:
+      call my_delay
+      loop None_loop2
+  pop cx
+  ret
+endp my_delay2
+
+
+
+help15:
+  jmp player_lose
+
+run_screen:
+  call enemy_delete
+  ; moving enemy
+  mov ax, [speedx]
+  add [xe], ax
+  mov ax, [speedy]
+  add [ye], ax
+
+  call enemy_character
+  call my_delay2
+
+  ; check if in red line:
+  mov bx, offset enemy1_character
+  mov cx, 14
+red_check_loop:
+  mov ax, [bx]
+  cmp [bx], 4
+  je help15
+  add bx, 1
+  loop red_check_loop
+
+  ; change speed:
+  mov bx, offset enemy1_character
+  add bx, 6
+  mov ax, [bx]
+  cmp al, 0eh ; yellow
+  je delete_enemy2
+
+after_delete_enemy:
+
+  mov bx, offset enemy1_character
+  mov ax, [bx]
+  cmp ax, 0eh ; yellow
+  je changey1 ; or
+  cmp ax, 7   ; grey
+  je changey1
+
+after_changey1:
+  
+  add bx, 4
+  mov ax, [bx]
+  cmp ax, 0eh
+  je changex1
+  cmp ax, 7   ; grey
+  je changex1
+
+after_changex1:
+
+  add bx, 4
+  mov ax, [bx]
+  cmp ax, 0eh
+  je changex2
+  cmp ax, 7   ; grey
+  je changex2
+
+after_changex2:
+  
+  mov bx, offset enemy1_character
+  add bx, 12
+  mov ax, [bx]
+  cmp al, 0eh
+  je changey2
+  cmp ax, 7   ; grey
+  je changey2
+
+
+after_changey2:
+  jmp run_screen2
+changey1:
+  neg [speedy]
+
+
+  jmp after_changey1
+
+changey2:
+  neg [speedy]
+
+  jmp after_changey2
+
+changex1:
+  neg [speedx]
+
+  jmp after_changex1
+
+changex2:
+  neg [speedx]
+  
+
+  jmp after_changex2
+
+delete_enemy2:
+  call enemy_delete
+  ; paint the area the enemy was there in yellow:
+  mov ax, [speedx]
+  sub [xe], ax
+  sub [xe], ax
+  sub [xe], ax
+  mov ax, [speedy]
+  sub [ye], ax
+  mov cx, 13
+  mov bx, offset enemy1_character
+  loop_paint_yellow_enemy:
+    mov [bx], 0eh
     add bx, 1
-    mov al, [bx] ;save to al the color
-    cmp al, 0eh
-    Je paintD
-    jmp main
-    paintD:   ; paint the shvil מצייר שובל
-    add [y], 2
-    jmp main
-    movleft:
-    call delete_char2
-    mov bx, offset my_zone
-    add bx, 5
-    mov al, [bx] ;save to al the color
-    cmp al, 0eh
-    Je paintL
-    jmp main
-    paintL:    ; paint the shvil מצייר שובל
-    sub [x], 2
-    jmp main
-    movright:
-    call delete_char2
-    mov bx, offset my_zone
-    add bx, 3
-    mov al, [bx] ;save to al the color
-    cmp al, 0eh
-    Je paintR
-    jmp main
-    paintR:
-    add [x], 2
-    jmp main
-    space: ; first space move
+    loop loop_paint_yellow_enemy
 
-    mov ax, [x]
-    mov [startx], ax
-    mov ax, [y]
-    mov [starty], ax
+  call enemy_delete
+  mov [xe], 10
+  mov [ye], 200
+  mov [speedx], 0
+  mov [speedy], 0
+  ; mov [bx], 0
 
 
-    mov ah,00h
-    int 16h
-    cmp al, 'w'
-    je movup_first
-    cmp al, 's'
-    je movdown_first
-    cmp al, 'd'
-    je help7 ; jmp to movright_first
-    cmp al, 'a'
-    je help8 ;jmp to movleft_first
-    cmp al, ' '
-    je help6
-    
-    call delete_char2
-    jmp space
 
-  help8:
-    jmp movleft_first
+  call enemy_character
+  jmp check_press
 
-  help7:
-    jmp movright_first
-  help6:
-    call delete_char2
-    jmp main
-  movup_first:
-    cmp [y], 11 ;checks if gets outside the screen
-    je space
 
-    ; checks if we already go to yellow
-    mov bx, offset my_zone
-    add bx, 7
-    mov dl, [bx]
-    cmp dl, 0eh
-    je space ;jmp to space
+; the copy from here!!!!
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    mov [first_tav], 1
+help19:
+  jmp player_lose
 
-    ; move
-    call delete_char2
-    sub [y], 2
+run_screen2:
+  call enemy_delete2
+  ; moving enemy
+  mov ax, [speedx2]
+  add [xe2], ax
+  mov ax, [speedy2]
+  add [ye2], ax
 
-    ; paint in red
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    add cx, 1
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
-    sub dx, 1
-    int 10h
+  call enemy_character2
+  call my_delay2
 
-    jmp space_main
+  ; check if in red line:
+  mov bx, offset enemy2_character
+  mov cx, 14
+red_check_loop2:
+  mov ax, [bx]
+  cmp [bx], 4
+  je help19
+  add bx, 1
+  loop red_check_loop2
 
-  movdown_first:
-    cmp [y], 191 ;checks if gets outside the screen
-    je help5 ;jmp to space
-    
-    ; checks if we already go to yellow
-    mov bx, offset my_zone
+  ; change speed:
+  mov bx, offset enemy2_character
+  add bx, 6
+  mov ax, [bx]
+  cmp al, 0eh ; yellow
+  je delete_enemy2_2
+
+after_delete_enemy2_2:
+
+  mov bx, offset enemy2_character
+  mov ax, [bx]
+  cmp ax, 0eh ; yellow
+  je changey1_2 ; or
+  cmp ax, 7   ; grey
+  je changey1_2
+
+after_changey1_2:
+  
+  add bx, 4
+  mov ax, [bx]
+  cmp ax, 0eh
+  je changex1_2
+  cmp ax, 7   ; grey
+  je changex1_2
+
+after_changex1_2:
+
+  add bx, 4
+  mov ax, [bx]
+  cmp ax, 0eh
+  je changex2_2
+  cmp ax, 7   ; grey
+  je changex2_2
+
+after_changex2_2:
+  
+  mov bx, offset enemy2_character
+  add bx, 12
+  mov ax, [bx]
+  cmp al, 0eh
+  je changey2_2
+  cmp ax, 7   ; grey
+  je changey2_2
+
+
+after_changey2_2:
+
+  cmp [is_space], 1
+  je jmp_to_space
+
+  cmp [is_space], 2
+  je jmp_to_main_space
+  jmp check_press
+
+jmp_to_space:
+  mov [is_space], 0
+  jmp check_press2
+
+jmp_to_main_space:
+  mov [is_space], 0
+  jmp check_press3
+
+changey1_2:
+  neg [speedy2]
+
+
+  jmp after_changey1_2
+
+changey2_2:
+  neg [speedy2]
+
+  jmp after_changey2_2
+
+changex1_2:
+  neg [speedx2]
+
+  jmp after_changex1_2
+
+changex2_2:
+  neg [speedx2]
+  
+
+  jmp after_changex2_2
+
+delete_enemy2_2:
+  call enemy_delete2
+  ; paint the area the enemy was there in yellow:
+  mov ax, [speedx2]
+  sub [xe2], ax
+  sub [xe2], ax
+  sub [xe2], ax
+  mov ax, [speedy2]
+  sub [ye2], ax
+  mov cx, 13
+  mov bx, offset enemy2_character
+  loop_paint_yellow_enemy2:
+    mov [bx], 0eh
     add bx, 1
-    mov dl, [bx]
-    cmp dl, 0eh
-    je help5 ;jmp to space
+    loop loop_paint_yellow_enemy2
 
-    mov [first_tav], 2
-    ; move
-    call delete_char2
-    add [y], 2
-    ; paint
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    sub dx, 2
-    add cx, 1
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
-    add dx, 1
-    int 10h
-
-    jmp space_main
-
-  help5:
-    jmp space
-
-    movleft_first:
-    cmp [x], 9 ;checks if gets outside the screen
-    je help5 ;jmp to space
-
-    ; checks if we already go to yellow
-    mov bx, offset my_zone
-    add bx, 5
-    mov dl, [bx]
-    cmp dl, 0eh
-    je help5
-
-    mov [first_tav], 4
-
-    ; move
-    call delete_char2
-    sub [x], 2
-    ; paint
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    sub dx, 1
-    add cx, 2
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
-    sub cx, 1
-    int 10h
-    
-    jmp space_main
+  call enemy_delete2
+  mov [xe2], 10
+  mov [ye2], 200
+  mov [speedx2], 0
+  mov [speedy2], 0
+  ; mov [bx], 0
 
 
-    movright_first:
-    cmp [x], 309 ;checks if gets outside the screen
-    je help5 ;jmp to space
 
-    ; checks if we already go to yellow
-    mov bx, offset my_zone
-    add bx, 3
-    mov dl, [bx]
-    cmp dl, 0eh
-    je help5
-
-    mov [first_tav], 3
-
-    ; move
-    call delete_char2
-    add [x], 2
-    ; paint
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    sub dx, 1
-    ; sub cx, 2
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
-    add cx, 1
-    int 10h
-
-    jmp space_main
+  call enemy_character2
+  jmp check_press
 
 
-    space_main:
-    call my_character
-    call delete_char2
-    
-    ; call print_array
-    mov bx, offset my_zone
-    mov cx, 8
-    yellow_check_loop:
-    ; mov ax, [bx]
-    ; cmp [bx], 14
-    ; je help_main
-    
-    mov dl, 48
-    add dl, [bx] ;if it yellow [bx] = 14
-    cmp dl, 62
-    je help9 ; jump to help_main
+start:
+  mov ax, @data
+  mov ds, ax
+  ; Graphic mode
+  mov ax, 13h
+  int 10h
+  ; screen
+  call make_screen
+  mov ah, 00h
+  int 16h
+  
+  ; variables for the game
+  mov x, 309 ; the cords of the character
+  mov y, 191
+  mov xs, 10 ; the cords of the screen
+  mov ys, 190
+  mov xs2, 10
+  mov ys2, 190
+  mov startx, 0
+  mov starty, 0 ;the cords when pressing space
+  mov paintx, 0
+  mov painty, 0
+  mov stopx, 0 ;the last pixel we stop to paint
+  mov stopy, 0
+  mov xe , 50 ; enemy x cord
+  mov ye , 50 ; enemy y
+  mov xe2, 100
+  mov ye2, 100
 
-    add bx, 1
-    loop yellow_check_loop
 
-    ; the countinu of space main:
-    
-    ; like main
-    ; call make_screen
-    ; call print_array
-    call my_character
-    mov ah,00h
-    int 16h
-    cmp al, 'w'
-    je movup2
-    cmp al, 's'
-    je movdown2
-    cmp al, 'd'
-    je help10 ;jmp to movright
-    cmp al, 'a'
-    je help3 ;jmp to movleft2
-    call delete_char2
-    jmp space_main
+  ; colors:
+  mov color , 7
+  mov color2 , 4 ; צבע השובל
+  mov colors , 0eh  ;צבע המסך
+  mov colord , 2 ;for debug
+  mov colord2 , 5
+  mov colorg1 , 4 ;color
+  mov colorg2 , 0eh ;to color
+  mov enemy_color , 5
+  mov enemy_color2, 56
 
-    help10:
-    jmp movright2
-    help9:
-    jmp help_main
-    help3:
-    jmp movleft2
-    movup2:
-    call delete_char2
-    
+  ; f or precents caculate:
+  mov precent_per_paint , 20
+  mov sum_pixels , 530 ;the number of pixels is 53,044
+  mov count_paint , 0 ;count the number of paint use in paint_function
+  mov paint1_precent , 0
+  mov paint2_precent , 0
+  mov screen_paint_precent , 0
 
-    ; paint the red dot
-    sub [y], 2
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    ; sub dx, 1
-    add cx, 1
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
 
-    sub dx, 1
 
+  ; booleans: 
+  ;0 - non, 1 - up (w), 2 - down (s), 3 - right (d), 4 - left (a)
+  mov first_tav , 0
+  mov final_tav , 0
+
+  mov is_complete_paint , 0
+  mov is_space , 0 ; 0 - regular, 1 - first_space, 2 - space
+
+
+  ; other:
+  mov index , 0
+  mov i , 0
+  mov i2 , 0
+  mov number_of_runns , 0
+  ; max dw 65535 ; the maximum value we can put in dw
+  mov enemy_index , 0
+  mov DELAY , 10
+
+  mov speedx , 1
+  mov speedy , 1
+  
+  mov speedx2, 1 ; for enemy2
+  mov speedy2, 1
+
+  
+  call print_precents
+  ; print % in the end
+  mov dl, 37
+  mov ah, 2
+  int 21h
+  
+  call enemy_character2
+  call enemy_character
+  
+
+main:
+  call my_character
+  ; call enemy_character2
+
+check_press:
+
+  mov ah, 01h
+  int 16h
+  jnz pressed
+  jmp run_screen
+
+pressed:
+
+  ; call print_array2
+  ; call print_array
+  mov ah,00h
+  int 16h
+  cmp al, 'w'
+  je movup
+  cmp al, 's'
+  je movdown
+  cmp al, 'a'
+  je movleft
+  cmp al, 'd'
+  je help ; help jump to movright
+  cmp al, ' '
+  je help2  ;jump to space
+  call delete_char2
+  jmp main
+help:
+  jmp movright
+help2:
+  jmp space
+movup:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 7
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  Je paintUP
+  jmp main
+  
+paintUP:  ; paint the shvil מצייר שובל
+  sub [y], 2
+  jmp main
+  
+movdown:
+  call delete_char2
+  
+  mov bx, offset my_zone
+  add bx, 1
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  Je paintD
+  jmp main
+paintD:   ; paint the shvil מצייר שובל
+  add [y], 2
+  jmp main
+movleft:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 5
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  Je paintL
+  jmp main
+paintL:    ; paint the shvil מצייר שובל
+  sub [x], 2
+  jmp main
+movright:
+  call delete_char2
+  mov bx, offset my_zone
+  add bx, 3
+  mov al, [bx] ;save to al the color
+  cmp al, 0eh
+  Je paintR
+  jmp main
+paintR:
+  add [x], 2
+  jmp main
+space: ; first space move
+
+  mov ax, [x]
+  mov [startx], ax
+  mov ax, [y]
+  mov [starty], ax
+
+check_press2:
+
+  mov ah, 01h
+  int 16h
+  jnz space_pressed
+  mov [is_space], 1
+  jmp run_screen
+
+space_pressed:
+  mov ah,00h
+  int 16h
+  cmp al, 'w'
+  je movup_first
+  cmp al, 's'
+  je movdown_first
+  cmp al, 'd'
+  je help7 ; jmp to movright_first
+  cmp al, 'a'
+  je help8 ;jmp to movleft_first
+  cmp al, ' '
+  je help6
+  
+  call delete_char2
+  jmp space
+
+help8:
+  jmp movleft_first
+
+help7:
+  jmp movright_first
+help6:
+  call delete_char2
+  jmp main
+movup_first:
+  cmp [y], 11 ;checks if gets outside the screen
+  je space
+
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 7
+  mov dl, [bx]
+  cmp dl, 0eh
+  je space ;jmp to space
+
+  mov [first_tav], 1
+
+  ; move
+  call delete_char2
+  sub [y], 2
+
+  ; paint in red
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  add cx, 1
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  sub dx, 1
+  int 10h
+
+  jmp space_main
+
+movdown_first:
+  cmp [y], 191 ;checks if gets outside the screen
+  je help5 ;jmp to space
+  
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 1
+  mov dl, [bx]
+  cmp dl, 0eh
+  je help5 ;jmp to space
+
+  mov [first_tav], 2
+  ; move
+  call delete_char2
+  add [y], 2
+  ; paint
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 2
+  add cx, 1
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  add dx, 1
+  int 10h
+
+  jmp space_main
+
+help5:
+  jmp space
+
+movleft_first:
+  cmp [x], 9 ;checks if gets outside the screen
+  je help5 ;jmp to space
+
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 5
+  mov dl, [bx]
+  cmp dl, 0eh
+  je help5
+
+  mov [first_tav], 4
+
+  ; move
+  call delete_char2
+  sub [x], 2
+  ; paint
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  add cx, 2
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  sub cx, 1
+  int 10h
+  
+  jmp space_main
+
+
+movright_first:
+  cmp [x], 309 ;checks if gets outside the screen
+  je help5 ;jmp to space
+
+  ; checks if we already go to yellow
+  mov bx, offset my_zone
+  add bx, 3
+  mov dl, [bx]
+  cmp dl, 0eh
+  je help5
+
+  mov [first_tav], 3
+
+  ; move
+  call delete_char2
+  add [x], 2
+  ; paint
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  ; sub cx, 2
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  add cx, 1
+  int 10h
+
+  jmp space_main
+
+
+space_main:
+  call my_character
+  ; call delete_char2
+  ; call my_character
+
+check_press3:
+  mov ah, 01h
+  int 16h
+  jnz space_main_pressed
+  mov [is_space], 2
+  jmp run_screen
+
+space_main_pressed:
+  call delete_char2
+  ; call print_array
+  ; call delete_char2
+  mov bx, offset my_zone
+  mov cx, 9
+yellow_check_loop:
+  ; mov ax, [bx]
+  ; cmp [bx], 14
+  ; je help_main
+  
+  mov dl, 48
+  add dl, [bx] ;if it yellow [bx] = 14
+  cmp dl, 62
+  je help9 ; jump to help_main
+
+  add bx, 1
+  loop yellow_check_loop
+
+  ; the countinu of space main:
+  
+  ; like main
+  ; call make_screen
+  ; call print_array
+  ; call my_character
+  mov ah,00h
+  int 16h
+  cmp al, 'w'
+  je movup2
+  cmp al, 's'
+  je movdown2
+  cmp al, 'd'
+  je help10 ;jmp to movright
+  cmp al, 'a'
+  je help3 ;jmp to movleft2
+  call delete_char2
+  jmp space_main
+
+help10:
+  jmp movright2
+help9:
+  jmp help_main
+help3:
+  jmp movleft2
+movup2:
+  call delete_char2
+  
+
+  ; paint the red dot
+  sub [y], 2
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  ; sub dx, 1
+  add cx, 1
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+
+  sub dx, 1
+
+  ; check if red
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je help11 ;jmp to exit
+
+  mov ah, 0ch
+  mov al,[color2]
+  int 10h
+
+  ; call print_array
+
+
+
+  ; mov bx, offset my_zone
+  ; add bx, 7
+  ; mov al, [bx] ;save to al the color
+  ; cmp al, 0eh
+  ; je help_main  ;jmp to main
+  mov final_tav, 1
+  ; call my_character
+  jmp space_main
+
+help11:
+  jmp player_lose
+movdown2:
+  call delete_char2
+  ; paint the shvil מצייר שובל
+  add [y], 2
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 2
+  add cx, 1
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  
+  
+
+  add dx, 1
+  
     ; check if red
-    mov ah, 0dh
-    int 10h
-    cmp al, [color2]
-    je help11 ;jmp to exit
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je help11 ;jmp to exit
 
-    mov ah, 0ch
-    mov al,[color2]
-    int 10h
+  mov ah, 0ch
+  mov al, [color2]
+  int 10h
+  ; mov bx, offset my_zone
+  ; add bx, 1
+  ; mov al, [bx] ;save to al the color
+  ; cmp al, 0eh
+  ; je help_main  ;jmp to main
+  mov final_tav, 2
+  jmp space_main
 
-    ; call print_array
+help_main: ;the painting area (does'nt change the name because I don't want to change the name in all the code)
 
+  ; check if we get to the same cords:
+  mov ax, [x]
+  cmp ax, [startx]
+  je check2
+  ; call make_screen
+  ; mov al, [first_tav]
+  ; mov ah, [final_tav]
+  ; cmp al, ah
+countinu_help_main:
+  jmp regular_paint
+  mov [colorg1], 4
+  mov [colorg2], 0eh
+  call color_to_color
+  jmp main
 
+check2:
+  mov ax, [y]
+  cmp ax, [starty]
+  je help11
+  jmp countinu_help_main
 
-    ; mov bx, offset my_zone
-    ; add bx, 7
-    ; mov al, [bx] ;save to al the color
-    ; cmp al, 0eh
-    ; je help_main  ;jmp to main
-    mov final_tav, 1
-    jmp space_main
+regular_paint: ;first check if the area bigger than we can paint
+  mov [number_of_runns], 0
+  mov [colors], 10h
 
-    help11:
-    jmp exit
-    movdown2:
-    call delete_char2
-    ; paint the shvil מצייר שובל
-    add [y], 2
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    sub dx, 2
-    add cx, 1
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
-    
-    
+  mov [is_complete_paint], 1
+  call start_paint1
+  call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint1  ;jmp to endless_paint
+  jmp continue_regular_paint1
+endless_paint1: ;paint again and again until we paint all the area
+  mov [number_of_runns], 0
+  mov [is_complete_paint], 1
+  add [count_paint], 1
+  mov ax, [stopx]
+  mov [paintx], ax
+  mov ax, [stopy]
+  mov [painty], ax
+  ; painting
+  call paint_area2
 
-    add dx, 1
-    
-        ; check if red
-    mov ah, 0dh
-    int 10h
-    cmp al, [color2]
-    je help11 ;jmp to exit
+  cmp [is_complete_paint], 0
+  je endless_paint1  ;jmp to endless_paint
 
-    mov ah, 0ch
-    mov al, [color2]
-    int 10h
-    ; mov bx, offset my_zone
-    ; add bx, 1
-    ; mov al, [bx] ;save to al the color
-    ; cmp al, 0eh
-    ; je help_main  ;jmp to main
-    mov final_tav, 2
-    jmp space_main
+continue_regular_paint1:
+  ; grey to black
+  mov [colorg1], 10h
+  mov [colorg2], 0
+  call color_to_color
 
-    help_main: ;the painting area (does'nt change the name because I don't want to change the name in all the code)
+  mov bl, [count_paint]
+  mov al, [precent_per_paint]
+  mul bl
+  ; ax = al * bl
+  mov [paint1_precent], ax
+  
+  mov dx, 0
+  mov ax, [number_of_runns]
+  mov bx, [sum_pixels]
+  div bx
+	; ax = ax dv bx
+  add [paint1_precent], ax
 
-    ; check if we get to the same cords:
-    mov ax, [x]
-    cmp ax, [startx]
-    je check2
-    ; call make_screen
-    ; mov al, [first_tav]
-    ; mov ah, [final_tav]
-    ; cmp al, ah
-    countinu_help_main:
-    jmp regular_paint
-    mov [colorg1], 4
-    mov [colorg2], 0eh
-    call color_to_color
-    jmp main
+;;;;;;;;
 
-    check2:
-    mov ax, [y]
-    cmp ax, [starty]
-    je help11
-    jmp countinu_help_main
+  mov [number_of_runns], 0
+  mov [colors], 10h
 
-    regular_paint: ;first check if the area bigger than we can paint
-    mov [number_of_runns], 0
-    mov [colors], 8
+  mov [is_complete_paint], 1
+  call start_paint2
+  call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint2  ;jmp to endless_paint
+  jmp continue_regular_paint2
+endless_paint2: ;paint again and again until we paint all the area
+  mov [number_of_runns], 0
+  mov [is_complete_paint], 1
+  add [count_paint], 1
 
-    mov [is_complete_paint], 1
-    call start_paint1
-    call paint_area2
-    mov [count_paint], 0
-    cmp [is_complete_paint], 0
-    je endless_paint1  ;jmp to endless_paint
-    jmp continue_regular_paint1
-    endless_paint1: ;paint again and again until we paint all the area
-    mov [number_of_runns], 0
-    mov [is_complete_paint], 1
-    add [count_paint], 1
-    mov ax, [stopx]
-    mov [paintx], ax
-    mov ax, [stopy]
-    mov [painty], ax
-    ; painting
-    call paint_area2
+  mov ax, [stopx]
+  mov [paintx], ax
+  mov ax, [stopy]
+  mov [painty], ax
+  ; painting
+  call paint_area2
 
-    cmp [is_complete_paint], 0
-    je endless_paint1  ;jmp to endless_paint
+  cmp [is_complete_paint], 0
+  je endless_paint2  ;jmp to endless_paint
 
-    continue_regular_paint1:
-    ; grey to black
-    mov [colorg1], 8
-    mov [colorg2], 0
-    call color_to_color
+continue_regular_paint2:
+  ; grey to black
+  mov [colorg1], 10h
+  mov [colorg2], 0
+  call color_to_color
 
-    mov bl, [count_paint]
-    mov al, [precent_per_paint]
-    mul bl
-    ; ax = al * bl
-    mov [paint1_precent], ax
-    
-    mov dx, 0
-    mov ax, [number_of_runns]
-    mov bx, [sum_pixels]
-    div bx
-        ; ax = ax dv bx
-    add [paint1_precent], ax
+  mov bl, [count_paint]
+  mov al, [precent_per_paint]
+  mul bl
+  ; ax = al * bl
+  mov [paint2_precent], ax
 
-    ;;;;;;;;
+  mov dx, 0
+  ; additing the rest precent (from the last paint)
+  mov ax, [number_of_runns]
+  mov bx, [sum_pixels]
+	div bx
+	; ax = ax dv bx
+  
+  add [paint2_precent], ax
 
-    mov [number_of_runns], 0
-    mov [colors], 8
-
-    mov [is_complete_paint], 1
-    call start_paint2
-    call paint_area2
-    mov [count_paint], 0
-    cmp [is_complete_paint], 0
-    je endless_paint2  ;jmp to endless_paint
-    jmp continue_regular_paint2
-    endless_paint2: ;paint again and again until we paint all the area
-    mov [number_of_runns], 0
-    mov [is_complete_paint], 1
-    add [count_paint], 1
-
-    mov ax, [stopx]
-    mov [paintx], ax
-    mov ax, [stopy]
-    mov [painty], ax
-    ; painting
-    call paint_area2
-
-    cmp [is_complete_paint], 0
-    je endless_paint2  ;jmp to endless_paint
-
-    continue_regular_paint2:
-    ; grey to black
-    mov [colorg1], 8
-    mov [colorg2], 0
-    call color_to_color
-
-    mov bl, [count_paint]
-    mov al, [precent_per_paint]
-    mul bl
-    ; ax = al * bl
-    mov [paint2_precent], ax
-
-    mov dx, 0
-    ; additing the rest precent (from the last paint)
-    mov ax, [number_of_runns]
-    mov bx, [sum_pixels]
-        div bx
-        ; ax = ax dv bx
-    
-    add [paint2_precent], ax
-
-    mov [number_of_runns], 0
-    mov [colors], 0eh  
+  mov [number_of_runns], 0
+  mov [colors], 0eh  
 
 
-    mov ax, [paint2_precent]
-    cmp ax, [paint1_precent]
-    jl start_endless_paint2
+  mov ax, [paint2_precent]
+  cmp ax, [paint1_precent]
+  jl start_endless_paint2
 
-    start_endless_paint1:
-    mov ax, [paint1_precent]
-    add [screen_paint_precent], ax
-    mov [is_complete_paint], 1
-    call start_paint1
-    call paint_area2
-    mov [count_paint], 0
-    cmp [is_complete_paint], 0
-    je endless_paint  ;jmp to endless_paint
-    jmp end_regular_paint
+start_endless_paint1:
+  mov ax, [paint1_precent]
+  add [screen_paint_precent], ax
+  mov [is_complete_paint], 1
+  call start_paint1
+  call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint  ;jmp to endless_paint
+  jmp end_regular_paint
 
-    start_endless_paint2:
-    mov ax, [paint2_precent]
-    add [screen_paint_precent], ax
-    mov [is_complete_paint], 1
-    call start_paint2
-    call paint_area2
-    mov [count_paint], 0
-    cmp [is_complete_paint], 0
-    je endless_paint  ;jmp to endless_paint
-    jmp end_regular_paint
+start_endless_paint2:
+  mov ax, [paint2_precent]
+  add [screen_paint_precent], ax
+  mov [is_complete_paint], 1
+  call start_paint2
+  call paint_area2
+  mov [count_paint], 0
+  cmp [is_complete_paint], 0
+  je endless_paint  ;jmp to endless_paint
+  jmp end_regular_paint
 
-    endless_paint: ;paint again and again until we paint all the area
-    mov [number_of_runns], 0
-    mov [is_complete_paint], 1
-    mov ax, [stopx]
-    mov [paintx], ax
-    mov ax, [stopy]
-    mov [painty], ax
-    ; painting
-    call paint_area2
+endless_paint: ;paint again and again until we paint all the area
+  mov [number_of_runns], 0
+  mov [is_complete_paint], 1
+  mov ax, [stopx]
+  mov [paintx], ax
+  mov ax, [stopy]
+  mov [painty], ax
+  ; painting
+  call paint_area2
 
-    cmp [is_complete_paint], 0
-    je help14  ;jmp to endless_paint
+  cmp [is_complete_paint], 0
+  je help14  ;jmp to endless_paint
 
-    end_regular_paint:
+end_regular_paint:
 
-        ; red to yellow
-    mov [colorg1], 4
-    mov [colorg2], 0eh
-    call color_to_color
+    ; red to yellow
+  mov [colorg1], 4
+  mov [colorg2], 0eh
+  call color_to_color
 
-    call print_precents
-    jmp main
-    help14: 
-    jmp endless_paint
-
-
-    movright2:
-    call delete_char2
-    ; paint
-    add [x], 2
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    sub dx, 1
-    ; sub cx, 2
+  call print_precents
+  jmp main
+help14: 
+  jmp endless_paint
 
 
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
-    add cx, 1
-    
-        ; check if red
-    mov ah, 0dh
-    int 10h
-    cmp al, [color2]
-    je exit ;jmp to exit
+movright2:
+  call delete_char2
+  ; paint
+  add [x], 2
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  ; sub cx, 2
 
-    mov ah, 0ch
-    mov al, [color2]
-    int 10h
-    ; mov bx, offset my_zone
-    ; add bx, 3
-    ; mov al, [bx] ;save to al the color
-    ; cmp al, 0eh
-    ; je help_main  ;jmp to main'
-    mov final_tav, 3
-    jmp space_main
-    movleft2:
-    call delete_char2
-    ; paint the shvil מצייר שובל
-    sub [x], 2
-    mov bh,0h
-    mov cx,[x]
-    mov dx,[y]
-    sub dx, 1
-    add cx, 2
-    
-    mov al,[color2]
-    mov ah,0ch
-    int 10h
 
-    sub cx, 1
-
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+  add cx, 1
+  
     ; check if red
-    mov ah, 0dh
-    int 10h
-    cmp al, [color2]
-    je exit ;jmp to exit
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je help18 ;jmp to player_lose
 
-    mov al, [color2]
-    mov ah, 0ch
-    int 10h
-    
+  mov ah, 0ch
+  mov al, [color2]
+  int 10h
+  ; mov bx, offset my_zone
+  ; add bx, 3
+  ; mov al, [bx] ;save to al the color
+  ; cmp al, 0eh
+  ; je help_main  ;jmp to main'
+  mov final_tav, 3
+  jmp space_main
+movleft2:
+  call delete_char2
+  ; paint the shvil מצייר שובל
+  sub [x], 2
+  mov bh,0h
+  mov cx,[x]
+  mov dx,[y]
+  sub dx, 1
+  add cx, 2
+  
+  mov al,[color2]
+  mov ah,0ch
+  int 10h
+
+  sub cx, 1
+
+  ; check if red
+  mov ah, 0dh
+  int 10h
+  cmp al, [color2]
+  je help18 ;jmp to player_lose
+
+  mov al, [color2]
+  mov ah, 0ch
+  int 10h
 
 
-    ; mov bx, offset my_zone
-    ; add bx, 5
-    ; mov al, [bx] ;save to al the color
-    ; cmp al, 0eh
-    ; je help_main  ;jmp to main
-    mov final_tav, 4
-    jmp space_main
 
+  ; mov bx, offset my_zone
+  ; add bx, 5
+  ; mov al, [bx] ;save to al the color
+  ; cmp al, 0eh
+  ; je help_main  ;jmp to main
+  mov final_tav, 4
+  jmp space_main
 
+help18:
+  jmp player_lose
 
-    mainloop:
-    jmp mainloop
-    exit:
-    ; jmp start
-    mov ax, 4c00h
-    int 21h
-    END start
+mainloop:
+  jmp mainloop
+exit:
+  ; jmp start
+  mov ax, 4c00h
+  int 21h
+END start
