@@ -62,9 +62,16 @@ DELAY dw 10
 speedx dw 1
 speedy dw 1
 
+message2 db 10, 13, 10, 13, 10, 13, 'You win! GG', 10, 13, '$'
+
+message3 db "press 'e' to play again", 10, 13, '$'
+message4 db "or 'q' to exit$"
+
+message5 db 10, 13, 10, 13, 10, 13, 'You lose! better luck next time', 10, 13, '$'
 
 CODESEG
 
+jmp start
 
 help12:
   jmp end_func
@@ -714,9 +721,65 @@ proc print_precents
   mov dl, 48
   add dl, bh
   int 21h
-  
+
+  mov ax, [screen_paint_precent]
+  cmp ax, 75
+  jge player_win
+
   ret
 endp print_precents
+
+player_win:
+  push seg message2
+  
+  mov dx, offset message2
+  mov ah, 9h
+  int 21h
+
+  push seg message3
+  mov dx, offset message3
+  mov ah, 9h
+  int 21h
+
+  push seg message4
+  mov dx, offset message4
+  mov ah, 9h
+  int 21h
+
+check_start_or_exit:
+  mov ah, 00h
+  int 16h
+
+  cmp al, 'e'
+  je help16
+  cmp al, 'q'
+  je help17
+  jmp check_start_or_exit
+
+help16:
+  jmp start
+
+help17:
+  jmp exit
+
+player_lose:
+  push seg message5
+  
+  mov dx, offset message5
+  mov ah, 9h
+  int 21h
+
+  push seg message3
+  mov dx, offset message3
+  mov ah, 9h
+  int 21h
+
+  push seg message4
+  mov dx, offset message4
+  mov ah, 9h
+  int 21h
+  
+  jmp check_start_or_exit
 
 proc enemy_character
   push [xe]
@@ -973,9 +1036,11 @@ proc my_delay2
       loop None_loop2
   pop cx
   ret
+endp my_delay2
+
 
 help15:
-  jmp exit
+  jmp player_lose
 
 run_screen:
   call enemy_delete
@@ -1129,6 +1194,10 @@ start:
   mov xs2, 10
   mov ys2, 190
   mov screen_paint_precent, 0
+  mov xe, 50 ; enemy x cord
+  mov ye, 50 ; enemy y
+  mov speedx, 1
+  mov speedy, 1
   
   call print_precents
   ; print % in the end
@@ -1478,7 +1547,7 @@ movup2:
   jmp space_main
 
 help11:
-  jmp exit
+  jmp player_lose
 movdown2:
   call delete_char2
   ; paint the shvil מצייר שובל
@@ -1704,7 +1773,7 @@ movright2:
   mov ah, 0dh
   int 10h
   cmp al, [color2]
-  je exit ;jmp to exit
+  je help18 ;jmp to player_lose
 
   mov ah, 0ch
   mov al, [color2]
@@ -1736,12 +1805,12 @@ movleft2:
   mov ah, 0dh
   int 10h
   cmp al, [color2]
-  je exit ;jmp to exit
+  je help18 ;jmp to player_lose
 
   mov al, [color2]
   mov ah, 0ch
   int 10h
-  
+
 
 
   ; mov bx, offset my_zone
@@ -1752,7 +1821,8 @@ movleft2:
   mov final_tav, 4
   jmp space_main
 
-
+help18:
+  jmp player_lose
 
 mainloop:
   jmp mainloop
