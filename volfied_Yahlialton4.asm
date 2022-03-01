@@ -1584,7 +1584,7 @@ start:
   mov stopy, 0
   mov xe , 50 ; enemy x cord
   mov ye , 50 ; enemy y
-  mov xe2, 100
+  mov xe2, 200
   mov ye2, 100
 
 
@@ -1625,13 +1625,13 @@ start:
   mov number_of_runns , 0
   ; max dw 65535 ; the maximum value we can put in dw
   mov enemy_index , 0
-  mov DELAY , 10
+  mov DELAY , 5
 
   mov speedx , 1
   mov speedy , 1
   
-  mov speedx2, 1 ; for enemy2
-  mov speedy2, 1
+  mov speedx2, -2 ; for enemy2
+  mov speedy2, -2
 
   
   call print_precents
