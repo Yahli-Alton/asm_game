@@ -1336,6 +1336,8 @@ after_delete_enemy:
   je changey1 ; or
   cmp ax, 7   ; grey
   je changey1
+  cmp ax, 23   ; other enemy
+  je changey1
 
 after_changey1:
   
@@ -1344,6 +1346,8 @@ after_changey1:
   cmp ax, 0eh
   je changex1
   cmp ax, 7   ; grey
+  je changex1
+  cmp ax, 23   ; other enemy
   je changex1
 
 after_changex1:
@@ -1354,6 +1358,8 @@ after_changex1:
   je changex2
   cmp ax, 7   ; grey
   je changex2
+  cmp ax, 23   ; other enemy
+  je changex2
 
 after_changex2:
   
@@ -1363,6 +1369,8 @@ after_changex2:
   cmp al, 0eh
   je changey2
   cmp ax, 7   ; grey
+  je changey2
+  cmp ax, 23   ; other enemy
   je changey2
 
 
@@ -1423,7 +1431,8 @@ delete_enemy2:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+help20:
+  jmp delete_enemy2_2
 help19:
   jmp player_lose
 
@@ -1453,7 +1462,7 @@ red_check_loop2:
   add bx, 6
   mov ax, [bx]
   cmp al, 0eh ; yellow
-  je delete_enemy2_2
+  je help20
 
 after_delete_enemy2_2:
 
@@ -1462,6 +1471,8 @@ after_delete_enemy2_2:
   cmp ax, 0eh ; yellow
   je changey1_2 ; or
   cmp ax, 7   ; grey
+  je changey1_2
+  cmp ax, 5   ; other enemy
   je changey1_2
 
 after_changey1_2:
@@ -1472,6 +1483,8 @@ after_changey1_2:
   je changex1_2
   cmp ax, 7   ; grey
   je changex1_2
+  cmp ax, 7   ; other enemy
+  je changex1_2
 
 after_changex1_2:
 
@@ -1480,6 +1493,8 @@ after_changex1_2:
   cmp ax, 0eh
   je changex2_2
   cmp ax, 7   ; grey
+  je changex2_2
+  cmp ax, 5   ; other enemy
   je changex2_2
 
 after_changex2_2:
@@ -1490,6 +1505,8 @@ after_changex2_2:
   cmp al, 0eh
   je changey2_2
   cmp ax, 7   ; grey
+  je changey2_2
+  cmp ax, 5   ; other enemy
   je changey2_2
 
 
