@@ -80,6 +80,9 @@ message4 db "or 'q' to exit$"
 
 message5 db 10, 13, 10, 13, 10, 13, 'You lose! better luck next time', 10, 13, '$'
 
+rules db "Rules & Controls:", 10, 13, 10, 13, "You are the grey character", 10, 13, "You move with:",10, 13,"'w' - move up", 10, 13,"'s' - move down", 10, 13, "'d' - move left", 10, 13,"'a' - move right", 10, 13,10, 13, "If you touch any enemy (in blue/purple), you lose", 10, 13, "Stay at the yellow zone for being safe",10, 13, "But you can go out from the yellow zone with 'space'", 10, 13, "Then you can claim part of the level's area",10, 13, "But be careful, if you crossing your own line, you lose", 10, 13 ,"If you claim 75% of the level's area you win",10, 13, 10, 13, "Good luck!",10, 13, 10, 13, "Press any key to start the game", '$'
+; rules db "rules & controls:", 10, 13, 10, 13, "you are the grey character", 10, 13, "you move with:",10, 13,"'w' - move up", 10, 13,"s - move down", 10, 13, "d - move left", 10, 13,"a - move right", 10, 13,10, 13,'$'
+
 CODESEG
 
 jmp start
@@ -768,7 +771,7 @@ check_start_or_exit:
   jmp check_start_or_exit
 
 help16:
-  jmp start
+  jmp reset
 
 help17:
   jmp exit
@@ -1561,6 +1564,17 @@ delete_enemy2_2:
 start:
   mov ax, @data
   mov ds, ax
+
+  push seg rules
+  
+  mov dx, offset rules
+  mov ah, 9h
+  int 21h
+  
+  mov ah, 00h
+  int 16h
+
+reset:
   ; Graphic mode
   mov ax, 13h
   int 10h
