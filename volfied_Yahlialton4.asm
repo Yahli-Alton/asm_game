@@ -1326,7 +1326,16 @@ red_check_loop:
   add bx, 6
   mov ax, [bx]
   cmp al, 0eh ; yellow
-  je delete_enemy2
+  jne after_delete_enemy
+  mov bx, offset enemy1_character
+  enemy_yellow_check_loop:
+  add bx, 1
+  mov ax, [bx]
+  cmp al, 0eh ; yellow
+  jne after_delete_enemy
+  add bx, 1
+  mov ax, [bx]
+  cmp al, 0eh ; yellow
 
 after_delete_enemy:
 
@@ -1409,10 +1418,10 @@ delete_enemy2:
   sub [ye], ax
   mov cx, 13
   mov bx, offset enemy1_character
-  loop_paint_yellow_enemy:
-    mov [bx], 0eh
-    add bx, 1
-    loop loop_paint_yellow_enemy
+  ; loop_paint_yellow_enemy:
+  ;   mov [bx], 0eh
+  ;   add bx, 1
+  ;   loop loop_paint_yellow_enemy
 
   call enemy_delete
   mov [xe], 10
@@ -1554,16 +1563,16 @@ delete_enemy2_2:
   ; paint the area the enemy was there in yellow:
   mov ax, [speedx2]
   sub [xe2], ax
-  sub [xe2], ax
-  sub [xe2], ax
+  ; sub [xe2], ax
+  ; sub [xe2], ax
   mov ax, [speedy2]
   sub [ye2], ax
   mov cx, 13
   mov bx, offset enemy2_character
-  loop_paint_yellow_enemy2:
-    mov [bx], 0eh
-    add bx, 1
-    loop loop_paint_yellow_enemy2
+  ; loop_paint_yellow_enemy2:
+  ;   mov [bx], 0eh
+  ;   add bx, 1
+  ;   loop loop_paint_yellow_enemy2
 
   call enemy_delete2
   mov [xe2], 10
@@ -2062,6 +2071,9 @@ help_main: ;the painting area (does'nt change the name because I don't want to c
   ; mov ah, [final_tav]
   ; cmp al, ah
 countinu_help_main:
+;;; here
+  call enemy_delete
+  call enemy_delete2
   jmp regular_paint
   mov [colorg1], 4
   mov [colorg2], 0eh
@@ -2217,6 +2229,9 @@ end_regular_paint:
   call color_to_color
 
   call print_precents
+  ;;;;;;;;;;;; here
+  call enemy_character
+  call enemy_character2
   jmp main
 help14: 
   jmp endless_paint
