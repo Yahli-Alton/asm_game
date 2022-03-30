@@ -78,7 +78,7 @@ message2 db 10, 13, 10, 13, 10, 13, 'You win! GG', 10, 13, '$'
 message3 db "press 'e' to play again", 10, 13, '$'
 message4 db "or 'q' to exit$"
 
-message5 db 10, 13, 10, 13, 10, 13, 'You lose! better luck next time', 10, 13, '$'
+message5 db 10, 13, 10, 13, 10, 13, 'You lost! better luck next time', 10, 13, '$'
 
 rules db "Rules & Controls:", 10, 13, 10, 13, "You are the grey character", 10, 13, "You move with:",10, 13,"'w' - move up", 10, 13,"'s' - move down", 10, 13, "'d' - move left", 10, 13,"'a' - move right", 10, 13,10, 13, "If you touch any enemy (in blue/purple), you lose", 10, 13, "Stay at the yellow zone for being safe",10, 13, "But you can go out from the yellow zone with 'space'", 10, 13, "Then you can claim part of the level's area",10, 13, "But be careful, if you crossing your own line, you lose", 10, 13 ,"If you claim 75% of the level's area you win",10, 13, 10, 13, "Good luck!",10, 13, 10, 13, "Press any key to start the game", '$'
 ; rules db "rules & controls:", 10, 13, 10, 13, "you are the grey character", 10, 13, "you move with:",10, 13,"'w' - move up", 10, 13,"s - move down", 10, 13, "d - move left", 10, 13,"a - move right", 10, 13,10, 13,'$'
@@ -1075,6 +1075,12 @@ proc enemy_delete
   add bx, [enemy_index]
   mov al, [bx] ;save to al the color
   add [enemy_index], 1
+  cmp al, [enemy_color2]
+  je black
+  jmp a ;countinu
+  black:
+  mov al, 0
+  a:
   ; ציור
   mov bh,0h
   mov cx,[xe]
@@ -1095,6 +1101,12 @@ proc enemy_delete
     add bx, [enemy_index]
     mov al, [bx] ;save to al the color
     add [enemy_index], 1
+    cmp al, [enemy_color2]
+    je black2
+    jmp b ;countinu
+  black2:
+    mov al, 0
+  b:
     ; ציור
     mov bh,0h
     mov cx,[xe]
@@ -1116,6 +1128,12 @@ proc enemy_delete
     add bx, [enemy_index]
     mov al, [bx] ;save to al the color
     add [enemy_index], 1
+    cmp al, [enemy_color2]
+    je black3
+    jmp c ;countinu
+  black3:
+    mov al, 0
+  c:
     ; ציור
     mov bh,0h
     mov cx,[xe]
@@ -1137,6 +1155,12 @@ proc enemy_delete
     add bx, [enemy_index]
     mov al, [bx] ;save to al the color
     add [enemy_index], 1
+    cmp al, [enemy_color2]
+    je black4
+    jmp d ;countinu
+  black4:
+    mov al, 0
+  d:
     ; ציור
     mov bh,0h
     mov cx,[xe]
@@ -1156,6 +1180,12 @@ proc enemy_delete
   add bx, [enemy_index]
   mov al, [bx] ;save to al the color
   add [enemy_index], 1
+  cmp al, [enemy_color2]
+  je black5
+  jmp e ;countinu
+  black5:
+  mov al, 0
+  e:
   ; ציור
   mov bh,0h
   mov cx,[xe]
@@ -1180,6 +1210,12 @@ proc enemy_delete2
   add bx, [enemy_index2]
   mov al, [bx] ;save to al the color
   add [enemy_index2], 1
+  cmp al, [enemy_color]
+  je black6
+  jmp f ;countinu
+black6:
+  mov al, 0
+f:
   ; ציור
   mov bh,0h
   mov cx,[xe2]
@@ -1200,6 +1236,12 @@ proc enemy_delete2
     add bx, [enemy_index2]
     mov al, [bx] ;save to al the color
     add [enemy_index2], 1
+    cmp al, [enemy_color]
+    je black7
+    jmp g ;countinu
+  black7:
+    mov al, 0
+  g:
     ; ציור
     mov bh,0h
     mov cx,[xe2]
@@ -1221,6 +1263,12 @@ proc enemy_delete2
     add bx, [enemy_index2]
     mov al, [bx] ;save to al the color
     add [enemy_index2], 1
+    cmp al, [enemy_color]
+    je black8
+    jmp h ;countinu
+  black8:
+    mov al, 0
+  h:
     ; ציור
     mov bh,0h
     mov cx,[xe2]
@@ -1242,6 +1290,12 @@ proc enemy_delete2
     add bx, [enemy_index2]
     mov al, [bx] ;save to al the color
     add [enemy_index2], 1
+    cmp al, [enemy_color]
+    je black9
+    jmp i1 ;countinu
+  black9:
+    mov al, 0
+  i1:
     ; ציור
     mov bh,0h
     mov cx,[xe2]
@@ -1261,6 +1315,12 @@ proc enemy_delete2
   add bx, [enemy_index2]
   mov al, [bx] ;save to al the color
   add [enemy_index2], 1
+  cmp al, [enemy_color]
+  je black10
+  jmp j ;countinu
+black10:
+  mov al, 0
+j:
   ; ציור
   mov bh,0h
   mov cx,[xe2]
