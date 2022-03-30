@@ -80,8 +80,9 @@ message4 db "or 'q' to exit$"
 
 message5 db 10, 13, 10, 13, 10, 13, 'You lost! better luck next time', 10, 13, '$'
 
-rules db "Rules & Controls:", 10, 13, 10, 13, "You are the grey character", 10, 13, "You move with:",10, 13,"'w' - move up", 10, 13,"'s' - move down", 10, 13, "'d' - move left", 10, 13,"'a' - move right", 10, 13,10, 13, "If you touch any enemy (in blue/purple), you lose", 10, 13, "Stay at the yellow zone for being safe",10, 13, "But you can go out from the yellow zone with 'space'", 10, 13, "Then you can claim part of the level's area",10, 13, "But be careful, if you crossing your own line, you lose", 10, 13 ,"If you claim 75% of the level's area you win",10, 13, 10, 13, "Good luck!",10, 13, 10, 13, "Press any key to start the game", '$'
+rules db "Rules & Controls:", 10, 13, 10, 13, "You are the grey character", 10, 13, "You move with:",10, 13,"'w' - move up", 10, 13,"'s' - move down", 10, 13, "'d' - move left", 10, 13,"'a' - move right", 10, 13,10, 13, "If you touch any enemy (in blue/purple), you lose", 10, 13, "Stay at the yellow zone for being safe",10, 13, "But you can go out from the yellow zone with 'space'", 10, 13, "Then you can claim part of the level's area",10, 13, "But be careful, if you crossing your own line, you lose", 10, 13 ,"If you claim 75% of the level's area you win",10, 13, 10, 13, "Good luck!",10, 13, 10, 13, "Choose the speed for the game:", 10, 13, 10, 13,"1 - easy, 2 - normal, 3 - hard, 4 - crazy" , '$'
 ; rules db "rules & controls:", 10, 13, 10, 13, "you are the grey character", 10, 13, "you move with:",10, 13,"'w' - move up", 10, 13,"s - move down", 10, 13, "d - move left", 10, 13,"a - move right", 10, 13,10, 13,'$'
+
 
 CODESEG
 
@@ -1213,9 +1214,9 @@ proc enemy_delete2
   cmp al, [enemy_color]
   je black6
   jmp f ;countinu
-black6:
+  black6:
   mov al, 0
-f:
+  f:
   ; ציור
   mov bh,0h
   mov cx,[xe2]
@@ -1318,9 +1319,9 @@ f:
   cmp al, [enemy_color]
   je black10
   jmp j ;countinu
-black10:
+  black10:
   mov al, 0
-j:
+  j:
   ; ציור
   mov bh,0h
   mov cx,[xe2]
@@ -1647,9 +1648,37 @@ start:
   mov dx, offset rules
   mov ah, 9h
   int 21h
+
+speed:
   
   mov ah, 00h
   int 16h
+
+  cmp al, '1'
+  je easy
+  cmp al, '2'
+  je normal
+  cmp al, '3'
+  je hard
+  cmp al, '4'
+  je crazy
+  jmp speed
+
+easy:
+  mov DELAY , 5
+  jmp reset
+
+normal:
+  mov DELAY , 3
+  jmp reset
+
+hard:
+  mov DELAY , 2
+  jmp reset
+
+crazy:
+  mov DELAY , 1
+  jmp reset
 
 reset:
   ; Graphic mode
@@ -1716,7 +1745,7 @@ reset:
   mov number_of_runns , 0
   ; max dw 65535 ; the maximum value we can put in dw
   mov enemy_index , 0
-  mov DELAY , 5
+  ; mov DELAY , 5
 
   mov speedx , 1
   mov speedy , 1
