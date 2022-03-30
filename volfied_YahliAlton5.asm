@@ -1533,7 +1533,7 @@ red_check_loop2:
 
 after_delete_enemy2_2:
 
-  mov is_after_paint2, 0
+  ; mov is_after_paint2, 0
 
   mov bx, offset enemy2_character
   mov ax, [bx]
