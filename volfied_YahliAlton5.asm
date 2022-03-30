@@ -76,11 +76,11 @@ speedy2 dw 1 ; for enemy2
 message2 db 10, 13, 10, 13, 10, 13, 'You win! GG', 10, 13, '$'
 
 message3 db "press 'e' to play again", 10, 13, '$'
-message4 db "or 'q' to exit$"
+message4 db "'q' to exit or 'r' for rules and speed$"
 
 message5 db 10, 13, 10, 13, 10, 13, 'You lost! better luck next time', 10, 13, '$'
 
-rules db "Rules & Controls:", 10, 13, 10, 13, "You are the grey character", 10, 13, "You move with:",10, 13,"'w' - move up", 10, 13,"'s' - move down", 10, 13, "'d' - move left", 10, 13,"'a' - move right", 10, 13,10, 13, "If you touch any enemy (in blue/purple), you lose", 10, 13, "Stay at the yellow zone for being safe",10, 13, "But you can go out from the yellow zone with 'space'", 10, 13, "Then you can claim part of the level's area",10, 13, "But be careful, if you crossing your own line, you lose", 10, 13 ,"If you claim 75% of the level's area you win",10, 13, 10, 13, "Good luck!",10, 13, 10, 13, "Choose the speed for the game:", 10, 13, 10, 13,"1 - easy, 2 - normal, 3 - hard, 4 - crazy" , '$'
+rules db 10,13,10,13,"Rules & Controls:", 10, 13, 10, 13, "You are the grey character", 10, 13, "You move with:",10, 13,"'w' - move up", 10, 13,"'s' - move down", 10, 13, "'d' - move left", 10, 13,"'a' - move right", 10, 13,10, 13, "If you touch any enemy (in blue/purple), you lose", 10, 13, "Stay at the yellow zone for being safe",10, 13, "But you can go out from the yellow zone with 'space'", 10, 13, "Then you can claim part of the level's area",10, 13, "But be careful, if you crossing your own line, you lose", 10, 13 ,"If you claim 75% of the level's area you win",10, 13, 10, 13, "Good luck!",10, 13, 10, 13, "Choose the speed for the game:", 10, 13, 10, 13,"1 - easy, 2 - normal, 3 - hard, 4 - crazy" , '$'
 ; rules db "rules & controls:", 10, 13, 10, 13, "you are the grey character", 10, 13, "you move with:",10, 13,"'w' - move up", 10, 13,"s - move down", 10, 13, "d - move left", 10, 13,"a - move right", 10, 13,10, 13,'$'
 
 
@@ -769,6 +769,8 @@ check_start_or_exit:
   je help16
   cmp al, 'q'
   je help17
+  cmp al, 'r'
+  je help21
   jmp check_start_or_exit
 
 help16:
@@ -776,6 +778,9 @@ help16:
 
 help17:
   jmp exit
+
+help21:
+  jmp start
 
 player_lose:
   push seg message5
@@ -1462,20 +1467,21 @@ changex2:
 delete_enemy2:
   call enemy_delete
   ; paint the area the enemy was there in yellow:
-  mov ax, [speedx]
-  sub [xe], ax
-  sub [xe], ax
-  sub [xe], ax
-  mov ax, [speedy]
-  sub [ye], ax
-  mov cx, 13
-  mov bx, offset enemy1_character
-  ; loop_paint_yellow_enemy:
-  ;   mov [bx], 0eh
+  ; mov ax, [speedx]
+  ; sub [xe], ax
+  ; sub [xe], ax
+  ; sub [xe], ax
+  ; mov ax, [speedy]
+  ; sub [ye], ax
+  ; mov cx, 13
+  ; mov bx, offset enemy1_character
+  ; loop_paint_black_enemy:
+  ;   mov [bx], 0
   ;   add bx, 1
-  ;   loop loop_paint_yellow_enemy
+  ;   loop loop_paint_black_enemy
 
-  call enemy_delete
+
+  ; call enemy_delete
   mov [xe], 10
   mov [ye], 200
   mov [speedx], 0
@@ -1523,9 +1529,11 @@ red_check_loop2:
   add bx, 6
   mov ax, [bx]
   cmp al, 0eh ; yellow
-  je help20
+  je help20 ; jmp delete_enemy2_2
 
 after_delete_enemy2_2:
+
+  mov is_after_paint2, 0
 
   mov bx, offset enemy2_character
   mov ax, [bx]
@@ -1613,14 +1621,14 @@ changex2_2:
 delete_enemy2_2:
   call enemy_delete2
   ; paint the area the enemy was there in yellow:
-  mov ax, [speedx2]
-  sub [xe2], ax
+  ; mov ax, [speedx2]
   ; sub [xe2], ax
   ; sub [xe2], ax
-  mov ax, [speedy2]
-  sub [ye2], ax
-  mov cx, 13
-  mov bx, offset enemy2_character
+  ; sub [xe2], ax
+  ; mov ax, [speedy2]
+  ; sub [ye2], ax
+  ; mov cx, 13
+  ; mov bx, offset enemy2_character
   ; loop_paint_yellow_enemy2:
   ;   mov [bx], 0eh
   ;   add bx, 1
@@ -1642,6 +1650,10 @@ delete_enemy2_2:
 start:
   mov ax, @data
   mov ds, ax
+  
+  ; 11, 8
+  mov ax, 3h
+  int 10h
 
   push seg rules
   
