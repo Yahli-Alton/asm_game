@@ -50,6 +50,9 @@ final_tav db 0
 is_complete_paint db 0
 is_space db 0 ; 0 - regular, 1 - first_space, 2 - space
 
+is_after_paint2 db 1
+is_after_paint db 1
+
 ; arrays:
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h ;my character
 enemy1_character db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h, 10h, 11h, 12h, 13h
@@ -1392,9 +1395,22 @@ red_check_loop:
   add bx, 6
   mov ax, [bx]
   cmp al, 0eh ; yellow
-  je delete_enemy2
+  je help23
+  jmp after_delete_enemy
+
+mov_enemy:
+  neg [speedx]
+  neg [speedy]
+  jmp after_changey2
+
+help23:
+  cmp is_after_paint, 1
+  jne mov_enemy
+  jmp delete_enemy2
 
 after_delete_enemy:
+
+  mov is_after_paint, 0
 
   mov bx, offset enemy1_character
   mov ax, [bx]
@@ -1493,12 +1509,19 @@ delete_enemy2:
   call enemy_character
   jmp check_press
 
+mov_enemy2:
+  neg [speedx2]
+  neg [speedy2]
+  jmp after_changey2_2
+
 
 ; the copy from here!!!!
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 help20:
+  cmp is_after_paint2, 1
+  jne mov_enemy2
   jmp delete_enemy2_2
 help19:
   jmp player_lose
@@ -1533,7 +1556,7 @@ red_check_loop2:
 
 after_delete_enemy2_2:
 
-  ; mov is_after_paint2, 0
+  mov is_after_paint2, 0
 
   mov bx, offset enemy2_character
   mov ax, [bx]
@@ -2314,6 +2337,8 @@ endless_paint: ;paint again and again until we paint all the area
   je help14  ;jmp to endless_paint
 
 end_regular_paint:
+  mov is_after_paint2, 1
+  mov is_after_paint, 1
 
     ; red to yellow
   mov [colorg1], 4
