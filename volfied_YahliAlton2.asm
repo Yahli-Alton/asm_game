@@ -1,6 +1,6 @@
 IDEAL
 MODEL small
-STACK 1060h
+STACK 100h
 DATASEG
 x dw 308 ; the cords of the character
 y dw 191
@@ -20,70 +20,7 @@ index dw 0
 i dw 0
 my_zone db 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h, 9h
 
-
 CODESEG
-proc paint_area2 ; alagorithm flood_fill
-
-
-    ; save to al the color
-  mov bh, 0h
-  mov cx, [paintx]
-  push cx ;save cx (paintx)
-  mov dx, [painty]
-  push dx ;save dx (painty)
-  mov ah, 0dh
-  int 10h
-  cmp al, 4
-  je end_func 
-  cmp al, 0eh
-  je end_func
-  ; cmp al, 7
-  ; je end_func
-  
-  ; paint
-  mov bh,0h
-  mov cx,[paintx]
-  mov dx,[painty]
-  mov al,[colors]
-  mov ah,0ch
-  int 10h
-  
-  
-  ; go to all 4 directions
-  add [paintx], 1
-  call paint_area2
-  sub [paintx], 2
-  call paint_area2
-  add [paintx], 1 ;return paintx to default
-  add [painty], 1
-  call paint_area2
-  sub [painty], 2
-  call paint_area2
-
-end_func:  
-  pop dx ;get paintyaaaa
-  pop cx ;get paintx
-  mov [paintx], cx ;return to the back cords
-  mov [painty], dx
-  ; cmp [painty], 100
-  ; je countinu2
-  ret
-
-countinu2:
-  ; mov ah, 00h
-  ; int 16h
-
-  ; mov dl, 48
-  ; add dl, dh
-  ; mov ah, 02h
-  ; int 21h
-
-  ret
-endp paint_area2
-
-proc paint_area3
-
-
 proc my_character ; מציירת קוביה
   push [x]
   push [y]
@@ -382,7 +319,7 @@ proc red_to_yellow
   
   loopend:
     add [xs2], 1
-    cmp [xs2], 311
+    cmp [xs2], 310
     je upy
     jmp loopaint
 
@@ -398,6 +335,51 @@ endpaint:
   ret
 endp red_to_yellow
 
+
+
+proc paint_area2 ; algorithm flood_fill
+
+
+    ; save to al the color
+  mov bh, 0h
+  mov cx, [paintx]
+  push cx ;save cx (paintx)
+  mov dx, [painty]
+  push dx ;save dx (painty)
+  mov ah, 0dh
+  int 10h
+  cmp al, 4
+  je end_func 
+  cmp al, 0eh
+  je end_func
+  
+  ; paint
+  mov bh,0h
+  mov cx,[paintx]
+  mov dx,[painty]
+  mov al,[colors]
+  mov ah,0ch
+  int 10h
+  
+  
+  ; go to all 4 directions
+  add paintx, 1
+  call paint_area2
+  sub paintx, 2
+  call paint_area2
+  add paintx, 1 ;return paintx to default
+  add painty, 1
+  call paint_area2
+  sub painty, 2
+  call paint_area2
+
+end_func:  
+  pop dx ;get painty
+  pop cx ;get paintx
+  mov [paintx], cx ;return to the back cords
+  mov [painty], dx
+  ret
+endp paint_area2
 
 proc start_paint ;where to start painting ;right now not ready
   mov ax, startx
@@ -418,6 +400,7 @@ start:
   call make_screen
   mov ah, 00h
   int 16h
+
 
 main:
   call my_character
@@ -495,7 +478,7 @@ space:
   ; cmp [x], 308
 space_main:
   ; like main
-  ; call make_screen
+  call make_screen
   call my_character
   ; call print_array
   mov ah,00h
@@ -552,10 +535,9 @@ movdown2:
   jmp space_main
 
 help_main:
-  ; call make_screena
+  ; call make_screen
   call start_paint
   call paint_area2
-  ; jmp mainloop
   call red_to_yellow
   jmp main
 
@@ -595,9 +577,6 @@ movleft2:
   cmp al, 0eh
   je help_main  ;jmp to main
   jmp space_main
-
-
-
 mainloop:
   jmp mainloop
 exit :

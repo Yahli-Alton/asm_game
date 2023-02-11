@@ -17,7 +17,8 @@ stopx dw 0 ;the last pixel we stop to paint
 stopy dw 0
 xe dw 50 ; enemy x cord
 ye dw 50 ; enemy y
-
+xe2
+ye2
 
 ; colors:
 color db 7

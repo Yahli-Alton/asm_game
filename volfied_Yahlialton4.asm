@@ -1328,20 +1328,14 @@ red_check_loop:
   cmp al, 0eh ; yellow
   jne after_delete_enemy
   mov bx, offset enemy1_character
-  mov cx, 3
   enemy_yellow_check_loop:
-    push cx
-    mov cx, 3
-    enemy_yellow_check_loop_inside:
-      add bx, 1
-      mov ax, [bx]
-      cmp al, 0eh ; yellow
-      jne after_delete_enemy
-      loop enemy_yellow_check_loop
-    pop cx
-    add bx, 1
-    loop enemy_yellow_check_loop
-  jmp delete_enemy2
+  add bx, 1
+  mov ax, [bx]
+  cmp al, 0eh ; yellow
+  jne after_delete_enemy
+  add bx, 1
+  mov ax, [bx]
+  cmp al, 0eh ; yellow
 
 after_delete_enemy:
 
